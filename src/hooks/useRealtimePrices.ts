@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { fetchAllMarketData } from "@/services/marketDataService";
 
 export interface MarketData {
   name: string;
@@ -23,34 +24,45 @@ const initialMarkets: MarketData[] = [
 
 export const useRealtimePrices = () => {
   const [markets, setMarkets] = useState<MarketData[]>(initialMarkets);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Initial fetch of real market data
   useEffect(() => {
-    // Update prices every 2-4 seconds randomly
+    const loadRealData = async () => {
+      setIsLoading(true);
+      const realData = await fetchAllMarketData();
+      if (realData.length > 0) {
+        setMarkets(realData);
+      }
+      setIsLoading(false);
+    };
+
+    loadRealData();
+
+    // Refresh every 30 seconds
+    const refreshInterval = setInterval(loadRealData, 30000);
+
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  // Simulate real-time updates between API calls
+  useEffect(() => {
+    if (isLoading) return;
+
     const interval = setInterval(() => {
       setMarkets((prevMarkets) =>
         prevMarkets.map((market) => {
-          // Random price change between -0.5% and +0.5%
-          const changePercent = (Math.random() - 0.5) * 1;
-          const priceChange = market.price * (changePercent / 100);
+          // Very small random fluctuation to simulate tick-by-tick updates
+          const microChange = (Math.random() - 0.5) * 0.1;
+          const priceChange = market.price * (microChange / 100);
           const newPrice = market.price + priceChange;
 
-          // Update 24h change
-          const newChange = market.change + changePercent * 0.1;
-
-          // Determine trend
-          const newTrend = changePercent > 0 ? "up" : "down";
-          const priceChangeDirection = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "none";
-
-          // Update volume slightly
-          const volumeNum = parseFloat(market.volume.replace("B", ""));
-          const newVolume = (volumeNum + (Math.random() - 0.5) * 0.2).toFixed(1) + "B";
+          const priceChangeDirection = microChange > 0 ? "up" : microChange < 0 ? "down" : "none";
 
           return {
             ...market,
-            price: parseFloat(newPrice.toFixed(2)),
-            change: parseFloat(newChange.toFixed(2)),
-            volume: newVolume,
-            trend: newTrend as "up" | "down",
+            price: parseFloat(newPrice.toFixed(market.symbol.includes("JPY") ? 2 : 
+                                               market.symbol.includes("EUR") || market.symbol.includes("GBP") ? 4 : 2)),
             priceChange: priceChangeDirection as "up" | "down" | "none",
           };
         })
@@ -65,10 +77,10 @@ export const useRealtimePrices = () => {
           }))
         );
       }, 500);
-    }, Math.random() * 2000 + 2000); // Random interval between 2-4 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isLoading]);
 
-  return markets;
+  return { markets, isLoading };
 };
