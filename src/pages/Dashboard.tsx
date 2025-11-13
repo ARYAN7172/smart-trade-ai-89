@@ -12,7 +12,7 @@ import { useRealtimePrices } from "@/hooks/useRealtimePrices";
 const Dashboard = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
   const [searchQuery, setSearchQuery] = useState("");
-  const markets = useRealtimePrices();
+  const { markets, isLoading } = useRealtimePrices();
 
   const filteredMarkets = markets.filter(
     (market) =>
@@ -47,11 +47,25 @@ const Dashboard = () => {
           {/* Markets Grid */}
           <div className="lg:col-span-2 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-4">Market Overview</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Market Overview</h2>
+                {isLoading && (
+                  <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                    Loading live data...
+                  </div>
+                )}
+              </div>
               <div className="grid md:grid-cols-2 gap-4">
-                {filteredMarkets.map((market, i) => (
-                  <MarketCard key={i} {...market} />
-                ))}
+                {filteredMarkets.length > 0 ? (
+                  filteredMarkets.map((market, i) => (
+                    <MarketCard key={i} {...market} />
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-8 text-muted-foreground">
+                    No markets found matching "{searchQuery}"
+                  </div>
+                )}
               </div>
             </div>
 
