@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react";
+import CandlestickChart from "./CandlestickChart";
 
 interface AutoTradingChartsProps {
   isEnabled: boolean;
@@ -98,6 +99,9 @@ const AutoTradingCharts = ({ isEnabled }: AutoTradingChartsProps) => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Candlestick Chart */}
+      <CandlestickChart isEnabled={isEnabled} />
+
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
