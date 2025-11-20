@@ -7,7 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, TrendingUp, TrendingDown, Zap, Pause } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const TradingPanel = () => {
+interface TradingPanelProps {
+  onAutoTradingChange?: (enabled: boolean) => void;
+}
+
+const TradingPanel = ({ onAutoTradingChange }: TradingPanelProps) => {
   const [amount, setAmount] = useState("");
   const [leverage, setLeverage] = useState("1");
   const [isAutoTradingEnabled, setIsAutoTradingEnabled] = useState(false);
@@ -38,11 +42,12 @@ const TradingPanel = () => {
 
     const newState = !isAutoTradingEnabled;
     setIsAutoTradingEnabled(newState);
+    onAutoTradingChange?.(newState);
 
     if (newState) {
       toast({
         title: "Auto Trading Enabled",
-        description: `AI bot will trade with $${amount} at ${leverage}x leverage`,
+        description: `AI bot will trade with $${amount} at ${leverage}x leverage. Charts now visible!`,
       });
     } else {
       toast({

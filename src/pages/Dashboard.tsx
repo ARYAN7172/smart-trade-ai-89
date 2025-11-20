@@ -7,11 +7,13 @@ import TimeframeSelector from "@/components/dashboard/TimeframeSelector";
 import TradingPanel from "@/components/dashboard/TradingPanel";
 import TradeHistory from "@/components/dashboard/TradeHistory";
 import PortfolioOverview from "@/components/dashboard/PortfolioOverview";
+import AutoTradingCharts from "@/components/dashboard/AutoTradingCharts";
 import { useRealtimePrices } from "@/hooks/useRealtimePrices";
 
 const Dashboard = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAutoTradingEnabled, setIsAutoTradingEnabled] = useState(false);
   const { markets, isLoading } = useRealtimePrices();
 
   const filteredMarkets = markets.filter(
@@ -41,6 +43,9 @@ const Dashboard = () => {
           </div>
           <TimeframeSelector selected={selectedTimeframe} onSelect={setSelectedTimeframe} />
         </div>
+
+        {/* Auto Trading Charts */}
+        <AutoTradingCharts isEnabled={isAutoTradingEnabled} />
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-6">
@@ -75,7 +80,7 @@ const Dashboard = () => {
 
           {/* Trading Panel */}
           <div className="lg:col-span-1">
-            <TradingPanel />
+            <TradingPanel onAutoTradingChange={setIsAutoTradingEnabled} />
           </div>
         </div>
       </div>
