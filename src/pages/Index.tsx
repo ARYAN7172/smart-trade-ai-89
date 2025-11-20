@@ -53,9 +53,89 @@ const Index = () => {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="border-primary/30 hover:bg-primary/10 text-lg px-8">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-primary/30 hover:bg-primary/10 text-lg px-8"
+              onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               Watch Demo
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Demo Section */}
+      <section id="demo-section" className="py-20 px-6 bg-card/30">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">How Trading Works on TRADEX</h2>
+            <p className="text-muted-foreground text-lg">See our AI-powered platform in action</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Step 1 */}
+            <div className="space-y-4">
+              <div className="relative rounded-xl overflow-hidden border-2 border-primary/30 shadow-glow-cyan">
+                <img 
+                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop" 
+                  alt="Dashboard Overview"
+                  className="w-full h-48 object-cover"
+                />
+                <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background font-bold text-lg">
+                  1
+                </div>
+              </div>
+              <h3 className="text-xl font-bold">View Live Market Data</h3>
+              <p className="text-muted-foreground">
+                Monitor real-time prices across crypto, stocks, forex, and indices with live updates
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="space-y-4">
+              <div className="relative rounded-xl overflow-hidden border-2 border-secondary/30 shadow-glow-cyan">
+                <img 
+                  src="https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=800&h=600&fit=crop" 
+                  alt="AI Trading Bot"
+                  className="w-full h-48 object-cover"
+                />
+                <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-background font-bold text-lg">
+                  2
+                </div>
+              </div>
+              <h3 className="text-xl font-bold">Configure AI Trading Bot</h3>
+              <p className="text-muted-foreground">
+                Set your trading amount, leverage, and let AI analyze Smart Money Concepts
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="space-y-4">
+              <div className="relative rounded-xl overflow-hidden border-2 border-accent/30 shadow-glow-cyan">
+                <img 
+                  src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=600&fit=crop" 
+                  alt="Execute Trades"
+                  className="w-full h-48 object-cover"
+                />
+                <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-accent flex items-center justify-center text-background font-bold text-lg">
+                  3
+                </div>
+              </div>
+              <h3 className="text-xl font-bold">Execute & Track Trades</h3>
+              <p className="text-muted-foreground">
+                Execute trades with one click and monitor your portfolio performance in real-time
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-16 text-center">
+            <Link to="/login">
+              <Button size="lg" className="bg-gradient-primary hover:opacity-90 border-0 shadow-glow-cyan text-lg px-8">
+                Try It Now
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
