@@ -8,12 +8,26 @@ import { AdvancedCandlestickChart } from "@/components/trading/AdvancedCandlesti
 const marketNames: Record<string, string> = {
   btc: "Bitcoin (BTC/USD)",
   eth: "Ethereum (ETH/USD)",
+  sol: "Solana (SOL/USD)",
+  ada: "Cardano (ADA/USD)",
+  xrp: "Ripple (XRP/USD)",
+  doge: "Dogecoin (DOGE/USD)",
+  dot: "Polkadot (DOT/USD)",
+  avax: "Avalanche (AVAX/USD)",
   gold: "Gold (XAU/USD)",
   silver: "Silver (XAG/USD)",
+  oil: "Crude Oil (WTI/USD)",
   eurusd: "Euro/Dollar (EUR/USD)",
   gbpusd: "Pound/Dollar (GBP/USD)",
+  usdjpy: "Dollar/Yen (USD/JPY)",
+  audusd: "Aussie/Dollar (AUD/USD)",
+  usdcad: "Dollar/Loonie (USD/CAD)",
+  gbpjpy: "Pound/Yen (GBP/JPY)",
   sp500: "S&P 500 Index",
   nasdaq: "NASDAQ Index",
+  dow: "Dow Jones Index",
+  nifty: "NIFTY 50",
+  banknifty: "Bank NIFTY",
 };
 
 const Index = () => {
