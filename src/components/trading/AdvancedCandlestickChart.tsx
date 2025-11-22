@@ -526,7 +526,7 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
               dataKey="high"
               shape={(props: any) => {
                 const data = candleData[props.index];
-                if (!data) return null;
+                if (!data || !props.yAxis || !props.yAxis.scale) return null;
                 
                 const yScale = props.yAxis.scale;
                 const yOpen = yScale(data.open);
