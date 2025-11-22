@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { DrawingTools, DrawingTool } from "./DrawingTools";
 import { toast } from "sonner";
+import { fetchCandlestickData, CandleData as ServiceCandleData } from "@/services/marketDataService";
 
 interface Ohlc {
   open: number;
@@ -220,9 +221,95 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
 
   // Generate initial candle data
   useEffect(() => {
-    const generateInitialCandles = () => {
+    const loadCandleData = async () => {
+      try {
+        // Try to fetch real candlestick data for crypto
+        const realData: ServiceCandleData[] = await fetchCandlestickData(marketId, '1h', 250);
+        
+        if (realData.length > 0) {
+          // Convert service data to chart data with indicator properties
+          const candles: CandleData[] = realData.map(d => ({
+            ...d,
+            ma20: undefined,
+            ma50: undefined,
+            bb_upper: undefined,
+            bb_middle: undefined,
+            bb_lower: undefined,
+            rsi: undefined,
+            macd: undefined,
+            macd_signal: undefined,
+            macd_histogram: undefined,
+            stochastic_k: undefined,
+            stochastic_d: undefined,
+            atr: undefined,
+            vwap: undefined
+          }));
+          
+          // Calculate all indicators
+          if (indicators.ma20.enabled) {
+            const ma20 = calculateSMA(candles, indicators.ma20.period);
+            candles.forEach((c, i) => c.ma20 = ma20[i]);
+          }
+          if (indicators.ma50.enabled) {
+            const ma50 = calculateSMA(candles, indicators.ma50.period);
+            candles.forEach((c, i) => c.ma50 = ma50[i]);
+          }
+          if (indicators.bollingerBands.enabled) {
+            const bb = calculateBollingerBands(candles, indicators.bollingerBands.period, indicators.bollingerBands.stdDev);
+            candles.forEach((c, i) => {
+              c.bb_upper = bb[i].upper;
+              c.bb_middle = bb[i].middle;
+              c.bb_lower = bb[i].lower;
+            });
+          }
+          if (indicators.rsi.enabled) {
+            const rsi = calculateRSI(candles, indicators.rsi.period);
+            candles.forEach((c, i) => c.rsi = rsi[i]);
+          }
+          if (indicators.macd.enabled) {
+            const macd = calculateMACD(candles, indicators.macd.fast, indicators.macd.slow, indicators.macd.signal);
+            candles.forEach((c, i) => {
+              c.macd = macd[i].macd;
+              c.macd_signal = macd[i].signal;
+              c.macd_histogram = macd[i].histogram;
+            });
+          }
+          if (indicators.stochastic.enabled) {
+            const stoch = calculateStochastic(candles, indicators.stochastic.period);
+            candles.forEach((c, i) => {
+              c.stochastic_k = stoch[i].k;
+              c.stochastic_d = stoch[i].d;
+            });
+          }
+          if (indicators.atr.enabled) {
+            const atr = calculateATR(candles, indicators.atr.period);
+            candles.forEach((c, i) => c.atr = atr[i]);
+          }
+          if (indicators.vwap.enabled) {
+            const vwap = calculateVWAP(candles);
+            candles.forEach((c, i) => c.vwap = vwap[i]);
+          }
+
+          setCandleData(candles.slice(-50));
+          if (candles.length > 0) {
+            setCurrentPrice(candles[candles.length - 1].close);
+          }
+          return;
+        }
+      } catch (error) {
+        console.log("Falling back to simulated data");
+      }
+      
+      // Fallback to simulated data
       const candles: CandleData[] = [];
-      let price = marketId === "btc" ? 92000 : marketId === "eth" ? 3200 : 2050;
+      const priceMap: Record<string, number> = {
+        btc: 92000, eth: 3200, sol: 140, ada: 0.55, xrp: 0.60, 
+        doge: 0.08, dot: 7.5, avax: 37, gold: 2050, silver: 24.5, 
+        oil: 75, eurusd: 1.085, gbpusd: 1.265, usdjpy: 148, 
+        audusd: 0.66, usdcad: 1.35, gbpjpy: 187, sp500: 4850, 
+        nasdaq: 17200, dow: 38000, nifty: 22000, banknifty: 48000
+      };
+      let price = priceMap[marketId] || 100;
       const now = Date.now();
       const numCandles = 250;
 
@@ -291,11 +378,11 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
         candles.forEach((c, i) => c.vwap = vwap[i]);
       }
 
-      return candles.slice(-50);
+      setCandleData(candles.slice(-50));
+      setCurrentPrice(price);
     };
 
-    setCandleData(generateInitialCandles());
-    setCurrentPrice(marketId === "btc" ? 92000 : marketId === "eth" ? 3200 : 2050);
+    loadCandleData();
   }, [selectedTimeframe, indicators, marketId]);
 
   // Update candles in real-time
