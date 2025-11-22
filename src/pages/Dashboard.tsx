@@ -1,86 +1,86 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { MarketSelector } from "@/components/trading/MarketSelector";
+import { AdvancedCandlestickChart } from "@/components/trading/AdvancedCandlestickChart";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import MarketCard from "@/components/dashboard/MarketCard";
-import TimeframeSelector from "@/components/dashboard/TimeframeSelector";
 import TradingPanel from "@/components/dashboard/TradingPanel";
 import TradeHistory from "@/components/dashboard/TradeHistory";
 import PortfolioOverview from "@/components/dashboard/PortfolioOverview";
-import AutoTradingCharts from "@/components/dashboard/AutoTradingCharts";
-import { useRealtimePrices } from "@/hooks/useRealtimePrices";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const marketNames: Record<string, string> = {
+  btc: "Bitcoin (BTC/USD)",
+  eth: "Ethereum (ETH/USD)",
+  sol: "Solana (SOL/USD)",
+  ada: "Cardano (ADA/USD)",
+  xrp: "Ripple (XRP/USD)",
+  doge: "Dogecoin (DOGE/USD)",
+  dot: "Polkadot (DOT/USD)",
+  avax: "Avalanche (AVAX/USD)",
+  gold: "Gold (XAU/USD)",
+  silver: "Silver (XAG/USD)",
+  oil: "Crude Oil (WTI/USD)",
+  eurusd: "Euro/Dollar (EUR/USD)",
+  gbpusd: "Pound/Dollar (GBP/USD)",
+  usdjpy: "Dollar/Yen (USD/JPY)",
+  audusd: "Aussie/Dollar (AUD/USD)",
+  usdcad: "Dollar/Loonie (USD/CAD)",
+  gbpjpy: "Pound/Yen (GBP/JPY)",
+  sp500: "S&P 500 Index",
+  nasdaq: "NASDAQ Index",
+  dow: "Dow Jones Index",
+  nifty: "NIFTY 50",
+  banknifty: "Bank NIFTY",
+};
 
 const Dashboard = () => {
-  const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedMarket, setSelectedMarket] = useState("btc");
   const [isAutoTradingEnabled, setIsAutoTradingEnabled] = useState(false);
-  const { markets, isLoading } = useRealtimePrices();
-
-  const filteredMarkets = markets.filter(
-    (market) =>
-      market.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      market.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <DashboardHeader />
 
-      <div className="container mx-auto px-6 py-6">
-        {/* Portfolio Stats */}
-        <PortfolioOverview />
-
-        {/* Search and Timeframe */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="Search markets (e.g., Bitcoin, Gold, NIFTY)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-card border-border focus:border-primary"
-            />
-          </div>
-          <TimeframeSelector selected={selectedTimeframe} onSelect={setSelectedTimeframe} />
+      <div className="container mx-auto px-4 py-4">
+        {/* Portfolio Overview */}
+        <div className="mb-4">
+          <PortfolioOverview />
         </div>
 
-        {/* Auto Trading Charts */}
-        <AutoTradingCharts isEnabled={isAutoTradingEnabled} />
-
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Markets Grid */}
-          <div className="lg:col-span-2 space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">Market Overview</h2>
-                {isLoading && (
-                  <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                    Loading live data...
-                  </div>
-                )}
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                {filteredMarkets.length > 0 ? (
-                  filteredMarkets.map((market, i) => (
-                    <MarketCard key={i} {...market} />
-                  ))
-                ) : (
-                  <div className="col-span-2 text-center py-8 text-muted-foreground">
-                    No markets found matching "{searchQuery}"
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Trade History */}
-            <TradeHistory />
+        {/* TradingView-Style Layout */}
+        <div className="flex gap-4 min-h-0 flex-1" style={{ height: 'calc(100vh - 280px)' }}>
+          {/* Market Selector Sidebar */}
+          <div className="w-80 flex-shrink-0">
+            <MarketSelector
+              selectedMarket={selectedMarket}
+              onMarketSelect={setSelectedMarket}
+            />
           </div>
 
-          {/* Trading Panel */}
-          <div className="lg:col-span-1">
-            <TradingPanel onAutoTradingChange={setIsAutoTradingEnabled} />
+          {/* Chart and Trading Panel */}
+          <div className="flex-1 min-w-0 flex flex-col gap-4">
+            {/* Main Chart */}
+            <div className="flex-1 min-h-0">
+              <AdvancedCandlestickChart
+                marketId={selectedMarket}
+                marketName={marketNames[selectedMarket] || "Market"}
+              />
+            </div>
+
+            {/* Bottom Tabs for Trading Panel and History */}
+            <div className="h-80 flex-shrink-0">
+              <Tabs defaultValue="trading" className="h-full flex flex-col">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="trading">Trading Panel</TabsTrigger>
+                  <TabsTrigger value="history">Trade History</TabsTrigger>
+                </TabsList>
+                <TabsContent value="trading" className="flex-1 overflow-auto mt-2">
+                  <TradingPanel onAutoTradingChange={setIsAutoTradingEnabled} />
+                </TabsContent>
+                <TabsContent value="history" className="flex-1 overflow-auto mt-2">
+                  <TradeHistory />
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </div>
       </div>
