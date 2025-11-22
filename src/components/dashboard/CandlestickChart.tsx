@@ -561,7 +561,8 @@ const CandlestickChart = ({ isEnabled }: CandlestickChartProps) => {
             dataKey="high"
             shape={(props: any) => {
               const data = candleData[props.index];
-              if (!data) return null;
+              // Safeguard against missing axis/scale during initial render or layout
+              if (!data || !props.yAxis || typeof props.yAxis.scale !== "function") return null;
               
               const yScale = props.yAxis.scale;
               const xPos = props.x;
