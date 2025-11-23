@@ -38,19 +38,23 @@ export const VerticalDrawingToolbar = ({
   onClear,
 }: VerticalDrawingToolbarProps) => {
   return (
-    <div className="flex flex-col gap-1 p-2 bg-card/95 backdrop-blur-sm border-r border-border h-full">
+    <div className="h-full flex flex-col items-center gap-2 py-4 bg-transparent">
       {tools.map((tool) => {
         const Icon = tool.icon;
         return (
           <Tooltip key={tool.id}>
             <TooltipTrigger asChild>
               <Button
-                variant={activeTool === tool.id ? "default" : "ghost"}
                 size="icon"
+                variant="ghost"
                 onClick={() => onToolChange(tool.id as DrawingTool)}
-                className={`h-10 w-10 ${tool.rotate ? 'rotate-90' : ''}`}
+                className={`h-9 w-9 ${
+                  activeTool === tool.id 
+                    ? "bg-primary/10 text-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
+                } ${tool.rotate ? 'rotate-90' : ''}`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -60,7 +64,7 @@ export const VerticalDrawingToolbar = ({
         );
       })}
       
-      <div className="my-2 h-px bg-border" />
+      <div className="my-2 h-px bg-border/30" />
       
       <Tooltip>
         <TooltipTrigger asChild>
@@ -68,9 +72,9 @@ export const VerticalDrawingToolbar = ({
             variant="ghost"
             size="icon"
             onClick={onClear}
-            className="h-10 w-10 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="h-9 w-9 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="w-4 h-4" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="right">

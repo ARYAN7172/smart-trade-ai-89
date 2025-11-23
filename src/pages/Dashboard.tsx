@@ -3,11 +3,8 @@ import { AdvancedCandlestickChart } from "@/components/trading/AdvancedCandlesti
 import { VerticalDrawingToolbar, DrawingTool } from "@/components/trading/VerticalDrawingToolbar";
 import { WatchlistPanel } from "@/components/trading/WatchlistPanel";
 import { ChartTopToolbar } from "@/components/trading/ChartTopToolbar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import TradingPanel from "@/components/dashboard/TradingPanel";
-import TradeHistory from "@/components/dashboard/TradeHistory";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
+import { OrderPanel } from "@/components/trading/OrderPanel";
+import { Button } from "@/components/ui/button";
 
 const marketNames: Record<string, string> = {
   btc: "Bitcoin (BTC/USD)",
@@ -66,64 +63,88 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <DashboardHeader />
-
-      {/* TradingView-Style Layout */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: Vertical Drawing Toolbar */}
-        <div className="w-14 flex-shrink-0">
-          <VerticalDrawingToolbar
-            activeTool={activeTool}
-            onToolChange={setActiveTool}
-            onClear={handleClearDrawings}
-          />
-        </div>
-
-        {/* Center: Chart Area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Top Toolbar */}
-          <ChartTopToolbar
-            selectedTimeframe={selectedTimeframe}
-            onTimeframeChange={setSelectedTimeframe}
-            indicators={indicators}
-            onIndicatorToggle={handleIndicatorToggle}
-            marketName={marketNames[selectedMarket] || "Market"}
-            currentPrice={84530}
-            priceChange={1.36}
-          />
-
-          {/* Main Chart */}
-          <div className="flex-1 min-h-0 p-2">
-            <AdvancedCandlestickChart
-              marketId={selectedMarket}
-              marketName={marketNames[selectedMarket] || "Market"}
+    <div className="min-h-screen bg-background flex justify-center items-center p-6">
+      {/* Main Container with Blue Glow */}
+      <div className="w-full max-w-[1600px] h-[900px] rounded-2xl overflow-hidden border-2 border-primary/30" 
+           style={{ boxShadow: '0 0 40px hsl(217 91% 60% / 0.3), inset 0 0 20px hsl(217 91% 60% / 0.1)' }}>
+        
+        <div className="flex h-full">
+          {/* Left: Vertical Drawing Toolbar */}
+          <div className="w-12 flex-shrink-0 bg-card/50 border-r border-border">
+            <VerticalDrawingToolbar
+              activeTool={activeTool}
+              onToolChange={setActiveTool}
+              onClear={handleClearDrawings}
             />
           </div>
 
-          {/* Bottom Trading Panel */}
-          <div className="h-64 border-t border-border">
-            <Tabs defaultValue="trading" className="h-full flex flex-col">
-              <TabsList className="w-full rounded-none bg-card/50 border-b border-border justify-start">
-                <TabsTrigger value="trading">Order Entry</TabsTrigger>
-                <TabsTrigger value="history">Positions & Orders</TabsTrigger>
-              </TabsList>
-              <TabsContent value="trading" className="flex-1 overflow-auto mt-0 p-3">
-                <TradingPanel onAutoTradingChange={setIsAutoTradingEnabled} />
-              </TabsContent>
-              <TabsContent value="history" className="flex-1 overflow-auto mt-0 p-3">
-                <TradeHistory />
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
+          {/* Center: Chart Area */}
+          <div className="flex-1 flex flex-col min-w-0 bg-[hsl(var(--chart-bg))]">
+            {/* Top Toolbar */}
+            <ChartTopToolbar
+              selectedTimeframe={selectedTimeframe}
+              onTimeframeChange={setSelectedTimeframe}
+              indicators={indicators}
+              onIndicatorToggle={handleIndicatorToggle}
+              marketName={marketNames[selectedMarket] || "Market"}
+              currentPrice={84530}
+              priceChange={1.36}
+            />
 
-        {/* Right: Watchlist Panel */}
-        <div className="w-80 flex-shrink-0">
-          <WatchlistPanel
-            selectedMarket={selectedMarket}
-            onMarketSelect={setSelectedMarket}
-          />
+            {/* Main Chart */}
+            <div className="flex-1 min-h-0">
+              <AdvancedCandlestickChart
+                marketId={selectedMarket}
+                marketName={marketNames[selectedMarket] || "Market"}
+              />
+            </div>
+
+            {/* Bottom Buy/Sell Panel */}
+            <div className="h-20 border-t border-border bg-card/30 flex items-center justify-center gap-6 px-6">
+              <Button 
+                size="lg"
+                className="w-32 h-12 text-lg font-semibold bg-primary hover:bg-primary/90"
+                style={{ background: 'hsl(217 91% 60%)' }}
+              >
+                Buy
+              </Button>
+              <Button 
+                size="lg"
+                className="w-32 h-12 text-lg font-semibold"
+                style={{ background: 'hsl(330 100% 70%)' }}
+              >
+                Sell
+              </Button>
+              
+              <div className="flex items-center gap-4 ml-8">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Qty</span>
+                  <input 
+                    type="number" 
+                    defaultValue="1"
+                    className="w-16 px-2 py-1 bg-muted/30 border border-border rounded text-sm text-center"
+                  />
+                </div>
+                <div className="text-2xl font-bold">51,650</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Watchlist + Order Panel */}
+          <div className="w-72 flex-shrink-0 flex flex-col bg-card/50 border-l border-border">
+            {/* Watchlist */}
+            <div className="flex-1 min-h-0">
+              <WatchlistPanel
+                selectedMarket={selectedMarket}
+                onMarketSelect={setSelectedMarket}
+              />
+            </div>
+            
+            {/* Order Panel */}
+            <div className="h-64 border-t border-border">
+              <OrderPanel />
+            </div>
+          </div>
         </div>
       </div>
     </div>

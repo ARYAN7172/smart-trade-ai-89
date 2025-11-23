@@ -56,128 +56,38 @@ export const ChartTopToolbar = ({
   priceChange,
 }: ChartTopToolbarProps) => {
   return (
-    <div className="flex items-center justify-between p-3 bg-card/95 backdrop-blur-sm border-b border-border">
-      {/* Left: Market Info */}
-      <div className="flex items-center gap-4">
-        <div>
-          <h3 className="text-lg font-bold text-foreground">{marketName}</h3>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-foreground">
-              ${currentPrice.toLocaleString()}
-            </span>
-            <span
-              className={`flex items-center gap-1 ${
-                priceChange >= 0 ? "text-success" : "text-destructive"
-              }`}
-            >
-              <TrendingUp className="w-3 h-3" />
-              {priceChange >= 0 ? "+" : ""}
-              {priceChange.toFixed(2)}%
-            </span>
-          </div>
-        </div>
+    <div className="h-12 border-b border-border bg-transparent flex items-center px-3 gap-3">
+      {/* Left: Market Symbol */}
+      <div className="flex items-center gap-2">
+        <TrendingUp className="w-4 h-4 text-primary/70" />
+        <span className="text-sm font-semibold">{marketName.split(' ')[0]}</span>
       </div>
 
-      {/* Center: Timeframes */}
-      <div className="flex items-center gap-1">
+      {/* Center: Timeframe Selector */}
+      <div className="flex items-center gap-0.5 ml-4">
         {timeframes.map((tf) => (
           <Button
             key={tf.value}
-            variant={selectedTimeframe.value === tf.value ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
             onClick={() => onTimeframeChange(tf)}
-            className="h-8"
+            className={`px-2.5 h-7 text-xs ${
+              selectedTimeframe.value === tf.value
+                ? "bg-muted/40 text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
+            }`}
           >
             {tf.label}
           </Button>
         ))}
       </div>
 
-      {/* Right: Tools */}
-      <div className="flex items-center gap-2">
-        {/* Indicators */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Activity className="w-4 h-4" />
-              Indicators
-              <Badge variant="secondary" className="ml-1">
-                {Object.values(indicators).filter((i: any) => i.enabled).length}
-              </Badge>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Technical Indicators</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onIndicatorToggle("ma20")}>
-              <div className="flex items-center justify-between w-full">
-                <span>MA 20</span>
-                {indicators.ma20?.enabled && (
-                  <Badge variant="default" className="text-xs">ON</Badge>
-                )}
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onIndicatorToggle("ma50")}>
-              <div className="flex items-center justify-between w-full">
-                <span>MA 50</span>
-                {indicators.ma50?.enabled && (
-                  <Badge variant="default" className="text-xs">ON</Badge>
-                )}
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onIndicatorToggle("bollingerBands")}>
-              <div className="flex items-center justify-between w-full">
-                <span>Bollinger Bands</span>
-                {indicators.bollingerBands?.enabled && (
-                  <Badge variant="default" className="text-xs">ON</Badge>
-                )}
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onIndicatorToggle("rsi")}>
-              <div className="flex items-center justify-between w-full">
-                <span>RSI</span>
-                {indicators.rsi?.enabled && (
-                  <Badge variant="default" className="text-xs">ON</Badge>
-                )}
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onIndicatorToggle("macd")}>
-              <div className="flex items-center justify-between w-full">
-                <span>MACD</span>
-                {indicators.macd?.enabled && (
-                  <Badge variant="default" className="text-xs">ON</Badge>
-                )}
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onIndicatorToggle("vwap")}>
-              <div className="flex items-center justify-between w-full">
-                <span>VWAP</span>
-                {indicators.vwap?.enabled && (
-                  <Badge variant="default" className="text-xs">ON</Badge>
-                )}
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Alerts */}
-        <Button variant="outline" size="sm" className="gap-2">
-          <Bell className="w-4 h-4" />
-          Alerts
+      {/* Right: Minimal Tool Icons */}
+      <div className="flex items-center gap-1 ml-auto">
+        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground">
+          <LineChart className="w-3.5 h-3.5 mr-1" />
+          Indicators
         </Button>
-
-        {/* Settings */}
-        <Button variant="outline" size="sm" className="gap-2">
-          <Settings className="w-4 h-4" />
-        </Button>
-
-        {/* Fullscreen */}
-        {onFullscreen && (
-          <Button variant="outline" size="sm" onClick={onFullscreen}>
-            <Maximize className="w-4 h-4" />
-          </Button>
-        )}
       </div>
     </div>
   );
