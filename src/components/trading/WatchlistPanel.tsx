@@ -35,35 +35,28 @@ export const WatchlistPanel = ({ selectedMarket, onMarketSelect }: WatchlistPane
   );
 
   return (
-    <Card className="flex flex-col h-full bg-card/95 backdrop-blur-sm border-l border-border">
-      {/* Search Bar */}
-      <div className="p-3 border-b border-border">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Search markets..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-background/50 border-border"
-          />
-        </div>
+    <div className="flex flex-col h-full bg-transparent">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+        <h2 className="text-base font-semibold">Watchlist</h2>
+        <button className="text-muted-foreground hover:text-foreground">⋯</button>
       </div>
 
-      {/* Header */}
-      <div className="grid grid-cols-[2fr,1fr,1fr] gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border">
+      {/* Column Headers */}
+      <div className="grid grid-cols-[2fr,1.2fr,1fr] gap-2 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border">
         <div>Symbol</div>
-        <div className="text-right">Last Price</div>
+        <div className="text-right">Last</div>
         <div className="text-right">Change</div>
       </div>
 
       {/* Market List */}
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+        <div className="px-2 py-1">
           {loading ? (
             Array.from({ length: 10 }).map((_, i) => (
               <div
                 key={i}
-                className="h-12 bg-muted/20 animate-pulse rounded"
+                className="h-12 bg-muted/20 animate-pulse rounded mb-1"
               />
             ))
           ) : (
@@ -71,36 +64,26 @@ export const WatchlistPanel = ({ selectedMarket, onMarketSelect }: WatchlistPane
               <button
                 key={market.id}
                 onClick={() => onMarketSelect(market.id)}
-                className={`w-full grid grid-cols-[2fr,1fr,1fr] gap-2 px-3 py-2 rounded hover:bg-accent/10 transition-colors ${
-                  selectedMarket === market.id ? "bg-accent/20 border border-accent/30" : ""
+                className={`w-full grid grid-cols-[2fr,1.2fr,1fr] gap-2 px-3 py-2.5 rounded hover:bg-muted/20 transition-colors text-sm ${
+                  selectedMarket === market.id ? "bg-muted/30" : ""
                 }`}
               >
-                <div className="text-left">
-                  <div className="font-semibold text-sm text-foreground">
-                    {market.symbol}
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {market.name}
-                  </div>
+                <div className="text-left font-medium text-foreground">
+                  {market.symbol}
                 </div>
                 
-                <div className="text-right text-sm font-medium text-foreground">
-                  ${market.price.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
+                <div className="text-right font-medium text-foreground">
+                  {market.price.toLocaleString(undefined, {
+                    minimumFractionDigits: market.price < 100 ? 2 : 1,
+                    maximumFractionDigits: market.price < 100 ? 2 : 1,
                   })}
                 </div>
                 
                 <div
-                  className={`text-right text-sm font-semibold flex items-center justify-end gap-1 ${
+                  className={`text-right text-xs font-semibold ${
                     market.change >= 0 ? "text-success" : "text-destructive"
                   }`}
                 >
-                  {market.change >= 0 ? (
-                    <TrendingUp className="w-3 h-3" />
-                  ) : (
-                    <TrendingDown className="w-3 h-3" />
-                  )}
                   {market.change >= 0 ? "+" : ""}
                   {market.change.toFixed(2)}%
                 </div>
@@ -109,6 +92,6 @@ export const WatchlistPanel = ({ selectedMarket, onMarketSelect }: WatchlistPane
           )}
         </div>
       </ScrollArea>
-    </Card>
+    </div>
   );
 };

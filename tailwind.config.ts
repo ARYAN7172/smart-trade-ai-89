@@ -51,18 +51,18 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        chart: {
+          bg: "hsl(var(--chart-bg))",
+          grid: "hsl(var(--chart-grid))",
+        },
       },
       backgroundImage: {
-        'gradient-cyber': 'var(--gradient-cyber)',
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-secondary': 'var(--gradient-secondary)',
-        'gradient-glow': 'var(--gradient-glow)',
+        'gradient-buy': 'var(--gradient-buy)',
+        'gradient-sell': 'var(--gradient-sell)',
       },
       boxShadow: {
-        'glow-cyan': 'var(--glow-cyan)',
-        'glow-purple': 'var(--glow-purple)',
-        'glow-pink': 'var(--glow-pink)',
-        'glow-strong': 'var(--glow-strong)',
+        'glow-blue': 'var(--glow-blue)',
+        'glow-blue-strong': 'var(--glow-blue-strong)',
       },
       borderRadius: {
         lg: "var(--radius)",
