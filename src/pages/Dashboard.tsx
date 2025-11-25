@@ -5,6 +5,7 @@ import { WatchlistPanel } from "@/components/trading/WatchlistPanel";
 import { ChartTopToolbar } from "@/components/trading/ChartTopToolbar";
 import { OrderPanel } from "@/components/trading/OrderPanel";
 import { Button } from "@/components/ui/button";
+import { ChartSettings, useChartSettings } from "@/components/trading/ChartSettings";
 
 const marketNames: Record<string, string> = {
   btc: "Bitcoin (BTC/USD)",
@@ -35,6 +36,7 @@ const Dashboard = () => {
   const [selectedMarket, setSelectedMarket] = useState("btc");
   const [isAutoTradingEnabled, setIsAutoTradingEnabled] = useState(false);
   const [activeTool, setActiveTool] = useState<DrawingTool>("select");
+  const { settings: chartSettings, setSettings: setChartSettings } = useChartSettings();
 
   // Dummy state for toolbar props
   const [selectedTimeframe, setSelectedTimeframe] = useState({ 
@@ -89,13 +91,16 @@ const Dashboard = () => {
               marketName={marketNames[selectedMarket] || "Market"}
               currentPrice={84530}
               priceChange={1.36}
-            />
+            >
+              <ChartSettings settings={chartSettings} onSettingsChange={setChartSettings} />
+            </ChartTopToolbar>
 
             {/* Main Chart */}
             <div className="flex-1 min-h-0">
               <AdvancedCandlestickChart
                 marketId={selectedMarket}
                 marketName={marketNames[selectedMarket] || "Market"}
+                chartSettings={chartSettings}
               />
             </div>
 

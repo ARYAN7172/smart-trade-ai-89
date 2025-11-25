@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { DrawingTools, DrawingTool } from "./DrawingTools";
 import { toast } from "sonner";
 import { fetchCandlestickData, CandleData as ServiceCandleData } from "@/services/marketDataService";
+import { ChartSettingsType } from "./ChartSettings";
 
 interface Ohlc {
   open: number;
@@ -53,6 +54,7 @@ interface CandleData {
 interface AdvancedCandlestickChartProps {
   marketId: string;
   marketName: string;
+  chartSettings?: ChartSettingsType;
 }
 
 const timeframes = [
@@ -67,7 +69,7 @@ const timeframes = [
   { label: "1h", value: 3600000, display: "1 Hour" },
 ];
 
-export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandlestickChartProps) => {
+export const AdvancedCandlestickChart = ({ marketId, marketName, chartSettings }: AdvancedCandlestickChartProps) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState(timeframes[4]); // 1m default
   const [candleData, setCandleData] = useState<CandleData[]>([]);
   const [currentPrice, setCurrentPrice] = useState(92000);
@@ -422,13 +424,18 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
   const CustomCandlestick = (props: any) => {
     const { x, y, width, height, open, close } = props;
     const isUp = close > open;
-    const color = isUp ? "hsl(var(--success))" : "hsl(var(--destructive))";
+    const color = isUp 
+      ? (chartSettings?.colors.bullish || "hsl(var(--success))")
+      : (chartSettings?.colors.bearish || "hsl(var(--destructive))");
     
     const candleWidth = Math.max(width * 0.6, 2);
     const xCenter = x + width / 2;
     const bodyTop = isUp ? y + height : y;
     const bodyBottom = isUp ? y : y + height;
     const bodyHeight = Math.abs(height);
+
+    // For hollow style
+    const isHollow = chartSettings?.candlestickStyle === "hollow";
 
     return (
       <g>
@@ -445,9 +452,9 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
           y={bodyTop}
           width={candleWidth}
           height={Math.max(bodyHeight, 1)}
-          fill={color}
+          fill={isHollow && isUp ? "transparent" : color}
           stroke={color}
-          strokeWidth={1}
+          strokeWidth={isHollow ? 2 : 1}
         />
       </g>
     );
@@ -493,7 +500,12 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
   const isUp = priceChange >= 0;
 
   return (
-    <Card className="p-4 bg-card border-border h-full flex flex-col">
+    <Card 
+      className="p-4 border-border h-full flex flex-col" 
+      style={{ 
+        backgroundColor: chartSettings?.colors.background || 'hsl(var(--card))',
+      }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -575,7 +587,11 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
       <div className="flex-1 min-h-0" ref={chartRef}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={candleData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke={chartSettings?.colors.gridLines || "hsl(var(--border))"}
+              opacity={chartSettings?.gridOpacity ?? 0.3}
+            />
             <XAxis
               dataKey="time"
               stroke="hsl(var(--muted-foreground))"
@@ -592,10 +608,22 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
             
             {/* Indicators */}
             {indicators.ma20.enabled && (
-              <Line type="monotone" dataKey="ma20" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+              <Line 
+                type="monotone" 
+                dataKey="ma20" 
+                stroke={chartSettings?.colors.ma20 || "hsl(var(--chart-1))"} 
+                strokeWidth={2} 
+                dot={false} 
+              />
             )}
             {indicators.ma50.enabled && (
-              <Line type="monotone" dataKey="ma50" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
+              <Line 
+                type="monotone" 
+                dataKey="ma50" 
+                stroke={chartSettings?.colors.ma50 || "hsl(var(--chart-2))"} 
+                strokeWidth={2} 
+                dot={false} 
+              />
             )}
             {indicators.bollingerBands.enabled && (
               <>
@@ -640,7 +668,11 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
         <h4 className="text-xs font-semibold mb-2 text-muted-foreground">Volume</h4>
         <ResponsiveContainer width="100%" height={120}>
           <ComposedChart data={candleData} margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke={chartSettings?.colors.gridLines || "hsl(var(--border))"}
+              opacity={chartSettings?.gridOpacity ?? 0.3}
+            />
             <XAxis 
               dataKey="time" 
               stroke="hsl(var(--muted-foreground))"
@@ -670,7 +702,10 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
               {candleData.map((entry, index) => (
                 <Cell 
                   key={`volume-${index}`} 
-                  fill={entry.close >= entry.open ? "hsl(var(--success))" : "hsl(var(--destructive))"} 
+                  fill={entry.close >= entry.open 
+                    ? (chartSettings?.colors.volumeBullish || "hsl(var(--success))") 
+                    : (chartSettings?.colors.volumeBearish || "hsl(var(--destructive))")
+                  } 
                   opacity={0.6}
                 />
               ))}
