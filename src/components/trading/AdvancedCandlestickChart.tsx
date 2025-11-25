@@ -635,6 +635,50 @@ export const AdvancedCandlestickChart = ({ marketId, marketName }: AdvancedCandl
         </ResponsiveContainer>
       </div>
 
+      {/* Volume Chart */}
+      <div className="mt-4">
+        <h4 className="text-xs font-semibold mb-2 text-muted-foreground">Volume</h4>
+        <ResponsiveContainer width="100%" height={120}>
+          <ComposedChart data={candleData} margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis 
+              dataKey="time" 
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fontSize: 10 }}
+              interval="preserveStartEnd"
+            />
+            <YAxis 
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fontSize: 10 }}
+              tickFormatter={(value) => value.toFixed(0)}
+            />
+            <Tooltip 
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-card border border-border rounded-lg p-2 shadow-lg">
+                      <p className="text-xs text-muted-foreground">{data.time}</p>
+                      <p className="text-sm font-semibold">Vol: {data.volume.toFixed(2)}</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Bar dataKey="volume">
+              {candleData.map((entry, index) => (
+                <Cell 
+                  key={`volume-${index}`} 
+                  fill={entry.close >= entry.open ? "hsl(var(--success))" : "hsl(var(--destructive))"} 
+                  opacity={0.6}
+                />
+              ))}
+            </Bar>
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+
       {/* Additional Indicator Charts */}
       <div className="space-y-4 mt-4">
         {indicators.rsi.enabled && (
