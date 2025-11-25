@@ -33,6 +33,7 @@ interface ChartTopToolbarProps {
   marketName: string;
   currentPrice: number;
   priceChange: number;
+  children?: React.ReactNode;
 }
 
 const timeframes: Timeframe[] = [
@@ -54,6 +55,7 @@ export const ChartTopToolbar = ({
   marketName,
   currentPrice,
   priceChange,
+  children,
 }: ChartTopToolbarProps) => {
   return (
     <div className="h-12 border-b border-border bg-transparent flex items-center px-3 gap-3">
@@ -88,6 +90,7 @@ export const ChartTopToolbar = ({
           <LineChart className="w-3.5 h-3.5 mr-1" />
           Indicators
         </Button>
+        {children}
       </div>
     </div>
   );
