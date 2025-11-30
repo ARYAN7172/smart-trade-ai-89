@@ -2,9 +2,8 @@ import { useState } from "react";
 import { AdvancedCandlestickChart } from "@/components/trading/AdvancedCandlestickChart";
 import { VerticalDrawingToolbar, DrawingTool } from "@/components/trading/VerticalDrawingToolbar";
 import { WatchlistPanel } from "@/components/trading/WatchlistPanel";
+import { MarketDetailPanel } from "@/components/trading/MarketDetailPanel";
 import { ChartTopToolbar } from "@/components/trading/ChartTopToolbar";
-import { OrderPanel } from "@/components/trading/OrderPanel";
-import { Button } from "@/components/ui/button";
 import { ChartSettings, useChartSettings } from "@/components/trading/ChartSettings";
 
 const marketNames: Record<string, string> = {
@@ -65,90 +64,71 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex justify-center items-center p-6">
-      {/* Main Container with Blue Glow */}
-      <div className="w-full max-w-[1600px] h-[900px] rounded-2xl overflow-hidden border-2 border-primary/30" 
-           style={{ boxShadow: '0 0 40px hsl(217 91% 60% / 0.3), inset 0 0 20px hsl(217 91% 60% / 0.1)' }}>
-        
-        <div className="flex h-full">
-          {/* Left: Vertical Drawing Toolbar */}
-          <div className="w-12 flex-shrink-0 bg-card/50 border-r border-border">
-            <VerticalDrawingToolbar
-              activeTool={activeTool}
-              onToolChange={setActiveTool}
-              onClear={handleClearDrawings}
+    <div className="min-h-screen bg-background flex">
+      <div className="flex h-screen w-full">
+        {/* Left: Vertical Drawing Toolbar */}
+        <div className="w-11 flex-shrink-0 bg-card/50 border-r border-border">
+          <VerticalDrawingToolbar
+            activeTool={activeTool}
+            onToolChange={setActiveTool}
+            onClear={handleClearDrawings}
+          />
+        </div>
+
+        {/* Center: Chart Area */}
+        <div className="flex-1 flex flex-col min-w-0 bg-[hsl(var(--chart-bg))]">
+          {/* Top Toolbar */}
+          <ChartTopToolbar
+            selectedTimeframe={selectedTimeframe}
+            onTimeframeChange={setSelectedTimeframe}
+            indicators={indicators}
+            onIndicatorToggle={handleIndicatorToggle}
+            marketName={marketNames[selectedMarket] || "Market"}
+            currentPrice={4215.82}
+            priceChange={1.36}
+          >
+            <ChartSettings settings={chartSettings} onSettingsChange={setChartSettings} />
+          </ChartTopToolbar>
+
+          {/* Main Chart */}
+          <div className="flex-1 min-h-0">
+            <AdvancedCandlestickChart
+              marketId={selectedMarket}
+              marketName={marketNames[selectedMarket] || "Market"}
+              chartSettings={chartSettings}
             />
           </div>
 
-          {/* Center: Chart Area */}
-          <div className="flex-1 flex flex-col min-w-0 bg-[hsl(var(--chart-bg))]">
-            {/* Top Toolbar */}
-            <ChartTopToolbar
-              selectedTimeframe={selectedTimeframe}
-              onTimeframeChange={setSelectedTimeframe}
-              indicators={indicators}
-              onIndicatorToggle={handleIndicatorToggle}
-              marketName={marketNames[selectedMarket] || "Market"}
-              currentPrice={84530}
-              priceChange={1.36}
-            >
-              <ChartSettings settings={chartSettings} onSettingsChange={setChartSettings} />
-            </ChartTopToolbar>
-
-            {/* Main Chart */}
-            <div className="flex-1 min-h-0">
-              <AdvancedCandlestickChart
-                marketId={selectedMarket}
-                marketName={marketNames[selectedMarket] || "Market"}
-                chartSettings={chartSettings}
-              />
-            </div>
-
-            {/* Bottom Buy/Sell Panel */}
-            <div className="h-20 border-t border-border bg-card/30 flex items-center justify-center gap-6 px-6">
-              <Button 
-                size="lg"
-                className="w-32 h-12 text-lg font-semibold bg-primary hover:bg-primary/90"
-                style={{ background: 'hsl(217 91% 60%)' }}
+          {/* Bottom Timeframe Buttons */}
+          <div className="h-10 border-t border-border bg-card/20 flex items-center justify-center gap-1 px-4">
+            {['1D', '5D', '1M', '3M', '6M', 'YTD', '1Y', '5Y', 'All'].map((tf) => (
+              <button
+                key={tf}
+                className="px-3 h-6 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/20 rounded transition-colors"
               >
-                Buy
-              </Button>
-              <Button 
-                size="lg"
-                className="w-32 h-12 text-lg font-semibold"
-                style={{ background: 'hsl(330 100% 70%)' }}
-              >
-                Sell
-              </Button>
-              
-              <div className="flex items-center gap-4 ml-8">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Qty</span>
-                  <input 
-                    type="number" 
-                    defaultValue="1"
-                    className="w-16 px-2 py-1 bg-muted/30 border border-border rounded text-sm text-center"
-                  />
-                </div>
-                <div className="text-2xl font-bold">51,650</div>
-              </div>
-            </div>
+                {tf}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Right: Watchlist + Order Panel */}
-          <div className="w-72 flex-shrink-0 flex flex-col bg-card/50 border-l border-border">
-            {/* Watchlist */}
-            <div className="flex-1 min-h-0">
-              <WatchlistPanel
-                selectedMarket={selectedMarket}
-                onMarketSelect={setSelectedMarket}
-              />
-            </div>
-            
-            {/* Order Panel */}
-            <div className="h-64 border-t border-border">
-              <OrderPanel />
-            </div>
+        {/* Right: Watchlist + Market Detail */}
+        <div className="w-80 flex-shrink-0 flex flex-col bg-card/50 border-l border-border">
+          {/* Watchlist - 60% */}
+          <div className="flex-[3] min-h-0">
+            <WatchlistPanel
+              selectedMarket={selectedMarket}
+              onMarketSelect={setSelectedMarket}
+            />
+          </div>
+          
+          {/* Market Detail - 40% */}
+          <div className="flex-[2] min-h-0">
+            <MarketDetailPanel
+              marketName={marketNames[selectedMarket] || "Market"}
+              currentPrice={4215.82}
+              priceChange={1.36}
+            />
           </div>
         </div>
       </div>
