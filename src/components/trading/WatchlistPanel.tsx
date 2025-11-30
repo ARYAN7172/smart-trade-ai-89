@@ -1,19 +1,34 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search, TrendingUp, TrendingDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { fetchAllMarketData, MarketDataResponse } from "@/services/marketDataService";
+import { ChevronDown, Plus } from "lucide-react";
 
 interface WatchlistPanelProps {
   selectedMarket: string;
   onMarketSelect: (marketId: string) => void;
 }
 
+const categoryIcons: Record<string, string> = {
+  'btc': '₿',
+  'eth': 'Ξ',
+  'sol': '◎',
+  'ada': '₳',
+  'xrp': 'XRP',
+  'doge': 'Ð',
+  'dot': '●',
+  'avax': '▲',
+};
+
 export const WatchlistPanel = ({ selectedMarket, onMarketSelect }: WatchlistPanelProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [markets, setMarkets] = useState<MarketDataResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    STOCKS: true,
+    FUTURES: true,
+    FOREX: true,
+    CRYPTO: true,
+  });
 
   useEffect(() => {
     const loadMarkets = async () => {
@@ -28,69 +43,97 @@ export const WatchlistPanel = ({ selectedMarket, onMarketSelect }: WatchlistPane
     return () => clearInterval(interval);
   }, []);
 
-  const filteredMarkets = markets.filter(
-    (market) =>
-      market.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      market.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const categorizeMarkets = () => {
+    const crypto = markets.filter(m => ['btc', 'eth', 'sol', 'ada', 'xrp', 'doge', 'dot', 'avax'].includes(m.id));
+    const stocks = markets.filter(m => ['sp500', 'nasdaq', 'dow', 'nifty', 'banknifty'].includes(m.id));
+    const forex = markets.filter(m => ['eurusd', 'gbpusd', 'usdjpy', 'audusd', 'usdcad', 'gbpjpy'].includes(m.id));
+    const futures = markets.filter(m => ['gold', 'silver', 'oil'].includes(m.id));
+    
+    return { STOCKS: stocks, FUTURES: futures, FOREX: forex, CRYPTO: crypto };
+  };
+
+  const categorizedMarkets = categorizeMarkets();
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({ ...prev, [category]: !prev[category] }));
+  };
 
   return (
-    <div className="flex flex-col h-full bg-transparent">
+    <div className="h-full flex flex-col bg-transparent">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <h2 className="text-base font-semibold">Watchlist</h2>
-        <button className="text-muted-foreground hover:text-foreground">⋯</button>
+      <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium">Watchlist</h3>
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+        </div>
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+          <Plus className="w-3.5 h-3.5" />
+        </Button>
       </div>
 
       {/* Column Headers */}
-      <div className="grid grid-cols-[2fr,1.2fr,1fr] gap-2 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border">
+      <div className="grid grid-cols-[1.2fr,0.8fr,0.6fr,0.7fr] gap-2 px-3 py-1.5 text-[10px] text-muted-foreground border-b border-border/50">
         <div>Symbol</div>
         <div className="text-right">Last</div>
-        <div className="text-right">Change</div>
+        <div className="text-right">Chg</div>
+        <div className="text-right">Chg%</div>
       </div>
 
-      {/* Market List */}
+      {/* Market List with Categories */}
       <ScrollArea className="flex-1">
-        <div className="px-2 py-1">
-          {loading ? (
-            Array.from({ length: 10 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-12 bg-muted/20 animate-pulse rounded mb-1"
-              />
-            ))
-          ) : (
-            filteredMarkets.map((market) => (
-              <button
-                key={market.id}
-                onClick={() => onMarketSelect(market.id)}
-                className={`w-full grid grid-cols-[2fr,1.2fr,1fr] gap-2 px-3 py-2.5 rounded hover:bg-muted/20 transition-colors text-sm ${
-                  selectedMarket === market.id ? "bg-muted/30" : ""
-                }`}
-              >
-                <div className="text-left font-medium text-foreground">
-                  {market.symbol}
-                </div>
-                
-                <div className="text-right font-medium text-foreground">
-                  {market.price.toLocaleString(undefined, {
-                    minimumFractionDigits: market.price < 100 ? 2 : 1,
-                    maximumFractionDigits: market.price < 100 ? 2 : 1,
+        {loading ? (
+          <div className="space-y-2 p-3">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-9 bg-muted/20 animate-pulse rounded" />
+            ))}
+          </div>
+        ) : (
+          <div>
+            {Object.entries(categorizedMarkets).map(([category, categoryMarkets]) => (
+              categoryMarkets.length > 0 && (
+                <div key={category}>
+                  <button
+                    onClick={() => toggleCategory(category)}
+                    className="w-full px-3 py-1.5 text-[10px] text-muted-foreground font-medium text-left hover:bg-muted/20 flex items-center gap-1"
+                  >
+                    <ChevronDown className={`w-3 h-3 transition-transform ${expandedCategories[category] ? '' : '-rotate-90'}`} />
+                    {category}
+                  </button>
+                  {expandedCategories[category] && categoryMarkets.map((market) => {
+                    const isSelected = market.id === selectedMarket;
+                    const changeValue = (market.price * market.change) / 100;
+                    return (
+                      <div
+                        key={market.id}
+                        onClick={() => onMarketSelect(market.id)}
+                        className={`grid grid-cols-[1.2fr,0.8fr,0.6fr,0.7fr] gap-2 px-3 py-2 cursor-pointer hover:bg-muted/20 transition-colors ${
+                          isSelected ? "bg-primary/10" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs opacity-60">{categoryIcons[market.id] || '●'}</span>
+                          <span className="text-xs font-medium truncate">{market.symbol}</span>
+                        </div>
+                        <div className="text-xs text-right">
+                          {market.price.toLocaleString('en-US', {
+                            minimumFractionDigits: market.price < 1 ? 4 : 2,
+                            maximumFractionDigits: market.price < 1 ? 4 : 2,
+                          })}
+                        </div>
+                        <div className={`text-xs text-right font-medium ${market.change >= 0 ? "text-[hsl(142,76%,50%)]" : "text-[hsl(0,84%,65%)]"}`}>
+                          {market.change >= 0 ? "+" : ""}{changeValue.toFixed(2)}
+                        </div>
+                        <div className={`text-xs text-right ${market.change >= 0 ? "text-[hsl(142,76%,50%)]" : "text-[hsl(0,84%,65%)]"}`}>
+                          {market.change >= 0 ? "+" : ""}{market.change.toFixed(2)}%
+                        </div>
+                      </div>
+                    );
                   })}
                 </div>
-                
-                <div
-                  className={`text-right text-xs font-semibold ${
-                    market.change >= 0 ? "text-success" : "text-destructive"
-                  }`}
-                >
-                  {market.change >= 0 ? "+" : ""}
-                  {market.change.toFixed(2)}%
-                </div>
-              </button>
-            ))
-          )}
-        </div>
+              )
+            ))}
+          </div>
+        )}
       </ScrollArea>
     </div>
   );
