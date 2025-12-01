@@ -120,10 +120,10 @@ export const WatchlistPanel = ({ selectedMarket, onMarketSelect }: WatchlistPane
                             maximumFractionDigits: market.price < 1 ? 4 : 2,
                           })}
                         </div>
-                        <div className={`text-xs text-right font-medium ${market.change >= 0 ? "text-[hsl(142,76%,50%)]" : "text-[hsl(0,84%,65%)]"}`}>
+                        <div className={`text-xs text-right font-medium ${market.change >= 0 ? "text-[#26a69a]" : "text-[#ef5350]"}`}>
                           {market.change >= 0 ? "+" : ""}{changeValue.toFixed(2)}
                         </div>
-                        <div className={`text-xs text-right ${market.change >= 0 ? "text-[hsl(142,76%,50%)]" : "text-[hsl(0,84%,65%)]"}`}>
+                        <div className={`text-xs text-right ${market.change >= 0 ? "text-[#26a69a]" : "text-[#ef5350]"}`}>
                           {market.change >= 0 ? "+" : ""}{market.change.toFixed(2)}%
                         </div>
                       </div>

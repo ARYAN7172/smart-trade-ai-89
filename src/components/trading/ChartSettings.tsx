@@ -34,23 +34,23 @@ export interface ChartSettingsType {
 
 const defaultSettings: ChartSettingsType = {
   colors: {
-    bullish: "#10b981",
-    bearish: "#ef4444",
-    volumeBullish: "#10b981",
-    volumeBearish: "#ef4444",
-    gridLines: "#334155",
-    ma20: "#3b82f6",
-    ma50: "#f59e0b",
-    background: "#0f172a",
+    bullish: "#26a69a",
+    bearish: "#ef5350",
+    volumeBullish: "#26a69a66",
+    volumeBearish: "#ef535066",
+    gridLines: "#2a2e39",
+    ma20: "#2962ff",
+    ma50: "#ff6d00",
+    background: "#131722",
   },
   candlestickStyle: "regular",
-  gridOpacity: 0.3,
+  gridOpacity: 0.15,
   theme: "dark",
 };
 
 const themeBackgrounds = {
-  dark: "#0f172a",
-  darker: "#0a0e1a",
+  dark: "#131722",
+  darker: "#0d111c",
   darkest: "#050810",
 };
 
