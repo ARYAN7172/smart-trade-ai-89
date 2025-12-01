@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AdvancedCandlestickChart } from "@/components/trading/AdvancedCandlestickChart";
+import { TradingViewChart } from "@/components/trading/TradingViewChart";
 import { VerticalDrawingToolbar, DrawingTool } from "@/components/trading/VerticalDrawingToolbar";
 import { WatchlistPanel } from "@/components/trading/WatchlistPanel";
 import { MarketDetailPanel } from "@/components/trading/MarketDetailPanel";
@@ -91,8 +91,8 @@ const Dashboard = () => {
           </ChartTopToolbar>
 
           {/* Main Chart */}
-          <div className="flex-1 min-h-0">
-            <AdvancedCandlestickChart
+          <div className="flex-1 min-h-0 overflow-auto">
+            <TradingViewChart
               marketId={selectedMarket}
               marketName={marketNames[selectedMarket] || "Market"}
               chartSettings={chartSettings}
