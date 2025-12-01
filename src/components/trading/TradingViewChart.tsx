@@ -11,6 +11,7 @@ import {
   HistogramSeries
 } from "lightweight-charts";
 import { ChartSettingsType } from "./ChartSettings";
+import { fetchAllMarketData, fetchCandlestickData } from "@/services/marketDataService";
 
 interface TradingViewChartProps {
   marketId: string;
@@ -158,19 +159,49 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings }: Tradin
   const macdSignalSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
   const macdHistogramSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
 
-  const [basePrice] = useState(() => {
-    const prices: Record<string, number> = {
-      btc: 92000, eth: 4200, sol: 180, ada: 0.85, xrp: 1.2,
-      doge: 0.15, dot: 25, avax: 80, gold: 4220, silver: 28,
-      oil: 85, eurusd: 1.08, gbpusd: 1.27, usdjpy: 150,
-      sp500: 5800, nasdaq: 19500, dow: 43000, nifty: 26400, banknifty: 60200
+  const [basePrice, setBasePrice] = useState<number>(100);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real market data to get current price
+  useEffect(() => {
+    const loadMarketPrice = async () => {
+      try {
+        const markets = await fetchAllMarketData();
+        const market = markets.find(m => m.id === marketId);
+        
+        if (market) {
+          setBasePrice(market.price);
+        } else {
+          // Fallback prices if API fails
+          const fallbackPrices: Record<string, number> = {
+            btc: 85905, eth: 2822, sol: 126.19, ada: 0.38, xrp: 2.02,
+            doge: 0.137, dot: 2.04, avax: 12.94, gold: 4220, silver: 28,
+            oil: 85, eurusd: 1.08, gbpusd: 1.27, usdjpy: 150,
+            sp500: 5800, nasdaq: 19500, dow: 43000, nifty: 26400, banknifty: 60200
+          };
+          setBasePrice(fallbackPrices[marketId] || 100);
+        }
+      } catch (error) {
+        console.error('Error loading market price:', error);
+        // Use fallback on error
+        const fallbackPrices: Record<string, number> = {
+          btc: 85905, eth: 2822, sol: 126.19, ada: 0.38, xrp: 2.02,
+          doge: 0.137, dot: 2.04, avax: 12.94, gold: 4220, silver: 28,
+          oil: 85, eurusd: 1.08, gbpusd: 1.27, usdjpy: 150,
+          sp500: 5800, nasdaq: 19500, dow: 43000, nifty: 26400, banknifty: 60200
+        };
+        setBasePrice(fallbackPrices[marketId] || 100);
+      } finally {
+        setLoading(false);
+      }
     };
-    return prices[marketId] || 100;
-  });
+
+    loadMarketPrice();
+  }, [marketId]);
 
   useEffect(() => {
     if (!chartContainerRef.current || !volumeContainerRef.current || 
-        !rsiContainerRef.current || !macdContainerRef.current) return;
+        !rsiContainerRef.current || !macdContainerRef.current || loading) return;
 
     const bgColor = chartSettings?.colors.background || '#131722';
     const gridColor = chartSettings?.colors.gridLines || '#2a2e39';
@@ -387,7 +418,7 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings }: Tradin
       rsiChart.remove();
       macdChart.remove();
     };
-  }, [marketId, basePrice, chartSettings]);
+  }, [marketId, basePrice, chartSettings, loading]);
 
   return (
     <div className="w-full h-full flex flex-col">

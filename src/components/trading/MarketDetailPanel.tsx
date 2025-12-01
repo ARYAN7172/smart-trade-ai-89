@@ -16,12 +16,12 @@ export const MarketDetailPanel = ({
   marketStatus = "Market closed"
 }: MarketDetailPanelProps) => {
   const performances = [
-    { label: "1W", value: -3.60, color: "text-[hsl(0,84%,65%)]" },
-    { label: "1M", value: 5.05, color: "text-[hsl(142,76%,50%)]" },
-    { label: "3M", value: 23.38, color: "text-[hsl(142,76%,50%)]" },
-    { label: "6M", value: 27.82, color: "text-[hsl(142,76%,50%)]" },
-    { label: "YTD", value: 60.60, color: "text-[hsl(142,76%,50%)]" },
-    { label: "1Y", value: 69.81, color: "text-[hsl(142,76%,50%)]" },
+    { label: "1W", value: -3.60, color: "text-[#ef5350]" },
+    { label: "1M", value: 5.05, color: "text-[#26a69a]" },
+    { label: "3M", value: 23.38, color: "text-[#26a69a]" },
+    { label: "6M", value: 27.82, color: "text-[#26a69a]" },
+    { label: "YTD", value: 60.60, color: "text-[#26a69a]" },
+    { label: "1Y", value: 69.81, color: "text-[#26a69a]" },
   ];
 
   return (
@@ -60,10 +60,10 @@ export const MarketDetailPanel = ({
         </div>
         
         <div className="flex items-center gap-2 mt-1">
-          <span className={`text-sm font-medium ${priceChange >= 0 ? "text-[hsl(142,76%,50%)]" : "text-[hsl(0,84%,65%)]"}`}>
+          <span className={`text-sm font-medium ${priceChange >= 0 ? "text-[#26a69a]" : "text-[#ef5350]"}`}>
             {priceChange >= 0 ? "+" : ""}{(currentPrice * priceChange / 100).toFixed(3)}
           </span>
-          <span className={`text-xs ${priceChange >= 0 ? "text-[hsl(142,76%,50%)]" : "text-[hsl(0,84%,65%)]"}`}>
+          <span className={`text-xs ${priceChange >= 0 ? "text-[#26a69a]" : "text-[#ef5350]"}`}>
             {priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}%
           </span>
         </div>

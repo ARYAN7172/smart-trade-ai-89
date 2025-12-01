@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TradingViewChart } from "@/components/trading/TradingViewChart";
 import { VerticalDrawingToolbar, DrawingTool } from "@/components/trading/VerticalDrawingToolbar";
 import { WatchlistPanel } from "@/components/trading/WatchlistPanel";
 import { MarketDetailPanel } from "@/components/trading/MarketDetailPanel";
 import { ChartTopToolbar } from "@/components/trading/ChartTopToolbar";
 import { ChartSettings, useChartSettings } from "@/components/trading/ChartSettings";
+import { fetchAllMarketData, MarketDataResponse } from "@/services/marketDataService";
 
 const marketNames: Record<string, string> = {
   btc: "Bitcoin (BTC/USD)",
@@ -36,6 +37,35 @@ const Dashboard = () => {
   const [isAutoTradingEnabled, setIsAutoTradingEnabled] = useState(false);
   const [activeTool, setActiveTool] = useState<DrawingTool>("select");
   const { settings: chartSettings, setSettings: setChartSettings } = useChartSettings();
+  const [marketData, setMarketData] = useState<MarketDataResponse[]>([]);
+  const [currentMarket, setCurrentMarket] = useState<MarketDataResponse | null>(null);
+
+  // Fetch market data
+  useEffect(() => {
+    const loadMarketData = async () => {
+      const data = await fetchAllMarketData();
+      setMarketData(data);
+      
+      // Find the current selected market
+      const market = data.find(m => m.id === selectedMarket);
+      if (market) {
+        setCurrentMarket(market);
+      }
+    };
+
+    loadMarketData();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadMarketData, 30000);
+    return () => clearInterval(interval);
+  }, [selectedMarket]);
+
+  // Update current market when selection changes
+  useEffect(() => {
+    const market = marketData.find(m => m.id === selectedMarket);
+    if (market) {
+      setCurrentMarket(market);
+    }
+  }, [selectedMarket, marketData]);
 
   // Dummy state for toolbar props
   const [selectedTimeframe, setSelectedTimeframe] = useState({ 
@@ -84,8 +114,8 @@ const Dashboard = () => {
             indicators={indicators}
             onIndicatorToggle={handleIndicatorToggle}
             marketName={marketNames[selectedMarket] || "Market"}
-            currentPrice={4215.82}
-            priceChange={1.36}
+            currentPrice={currentMarket?.price || 0}
+            priceChange={currentMarket?.change || 0}
           >
             <ChartSettings settings={chartSettings} onSettingsChange={setChartSettings} />
           </ChartTopToolbar>
@@ -126,8 +156,8 @@ const Dashboard = () => {
           <div className="flex-[2] min-h-0">
             <MarketDetailPanel
               marketName={marketNames[selectedMarket] || "Market"}
-              currentPrice={4215.82}
-              priceChange={1.36}
+              currentPrice={currentMarket?.price || 0}
+              priceChange={currentMarket?.change || 0}
             />
           </div>
         </div>
