@@ -64,10 +64,10 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-[hsl(222,47%,9%)] flex">
       <div className="flex h-screen w-full">
         {/* Left: Vertical Drawing Toolbar */}
-        <div className="w-11 flex-shrink-0 bg-card/50 border-r border-border">
+        <div className="w-11 flex-shrink-0 bg-[hsl(222,47%,11%)] border-r border-[hsl(215,16%,20%)]">
           <VerticalDrawingToolbar
             activeTool={activeTool}
             onToolChange={setActiveTool}
@@ -76,7 +76,7 @@ const Dashboard = () => {
         </div>
 
         {/* Center: Chart Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[hsl(var(--chart-bg))]">
+        <div className="flex-1 flex flex-col min-w-0 bg-[hsl(222,47%,9%)]">
           {/* Top Toolbar */}
           <ChartTopToolbar
             selectedTimeframe={selectedTimeframe}
@@ -100,11 +100,11 @@ const Dashboard = () => {
           </div>
 
           {/* Bottom Timeframe Buttons */}
-          <div className="h-10 border-t border-border bg-card/20 flex items-center justify-center gap-1 px-4">
+          <div className="h-10 border-t border-[hsl(215,16%,20%)] bg-[hsl(222,47%,11%)] flex items-center justify-center gap-1 px-4">
             {['1D', '5D', '1M', '3M', '6M', 'YTD', '1Y', '5Y', 'All'].map((tf) => (
               <button
                 key={tf}
-                className="px-3 h-6 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/20 rounded transition-colors"
+                className="px-3 h-6 text-xs text-[hsl(217,10%,65%)] hover:text-foreground hover:bg-[hsl(215,25%,20%)] rounded transition-colors"
               >
                 {tf}
               </button>
@@ -113,7 +113,7 @@ const Dashboard = () => {
         </div>
 
         {/* Right: Watchlist + Market Detail */}
-        <div className="w-80 flex-shrink-0 flex flex-col bg-card/50 border-l border-border">
+        <div className="w-80 flex-shrink-0 flex flex-col bg-[hsl(222,47%,11%)] border-l border-[hsl(215,16%,20%)]">
           {/* Watchlist - 60% */}
           <div className="flex-[3] min-h-0">
             <WatchlistPanel
