@@ -10,7 +10,6 @@ import {
   LineSeries,
   HistogramSeries
 } from "lightweight-charts";
-import { Canvas as FabricCanvas, Line, IText, FabricObject } from "fabric";
 import { ChartSettingsType } from "./ChartSettings";
 import { fetchAllMarketData } from "@/services/marketDataService";
 import { DrawingTool } from "./VerticalDrawingToolbar";
@@ -21,6 +20,12 @@ interface TradingViewChartProps {
   chartSettings?: ChartSettingsType;
   activeTool?: DrawingTool;
   onClearDrawings?: () => void;
+}
+
+interface DrawnObject {
+  type: string;
+  points: { x: number; y: number }[];
+  color: string;
 }
 
 // Helper function to calculate technical indicators
@@ -116,7 +121,7 @@ const calculateEMA = (data: (number | null)[], period: number): (number | null)[
 // Generate 1 year of daily candlestick data
 const generateCandleData = (basePrice: number, days: number = 365): CandlestickData[] => {
   const data: CandlestickData[] = [];
-  let currentPrice = basePrice * 0.7; // Start 30% lower to show growth
+  let currentPrice = basePrice * 0.7;
   const now = new Date();
   
   for (let i = 0; i < days; i++) {
@@ -124,9 +129,8 @@ const generateCandleData = (basePrice: number, days: number = 365): CandlestickD
     date.setDate(date.getDate() - (days - i));
     const time = Math.floor(date.getTime() / 1000) as Time;
     
-    // Daily volatility varies by asset type
     const volatility = basePrice * 0.025;
-    const trend = (basePrice - currentPrice) / days * 0.3; // Slight trend toward current price
+    const trend = (basePrice - currentPrice) / days * 0.3;
     const change = (Math.random() - 0.45) * volatility + trend;
     
     const open = currentPrice;
@@ -156,27 +160,20 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
   const rsiContainerRef = useRef<HTMLDivElement>(null);
   const macdContainerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   
   const chartRef = useRef<IChartApi | null>(null);
   const volumeChartRef = useRef<IChartApi | null>(null);
   const rsiChartRef = useRef<IChartApi | null>(null);
   const macdChartRef = useRef<IChartApi | null>(null);
-  
-  const candleSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
-  const volumeSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
-  const rsiSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
-  const macdSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
-  const macdSignalSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
-  const macdHistogramSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
 
   const [basePrice, setBasePrice] = useState<number>(100);
   const [loading, setLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null);
-  const [currentLine, setCurrentLine] = useState<Line | null>(null);
+  const [drawnObjects, setDrawnObjects] = useState<DrawnObject[]>([]);
+  const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
 
-  // Fetch real market data to get current price
+  // Fetch real market data
   useEffect(() => {
     const loadMarketPrice = async () => {
       try {
@@ -211,75 +208,113 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
     loadMarketPrice();
   }, [marketId]);
 
-  // Initialize Fabric.js canvas for drawing tools
-  useEffect(() => {
-    if (!canvasRef.current || !chartContainerRef.current) return;
-
-    const container = chartContainerRef.current;
-    const canvas = new FabricCanvas(canvasRef.current, {
-      width: container.clientWidth,
-      height: 500,
-      selection: activeTool === "select",
-    });
-
-    fabricCanvasRef.current = canvas;
-
-    return () => {
-      canvas.dispose();
-    };
+  // Clear drawings function
+  const clearAllDrawings = useCallback(() => {
+    setDrawnObjects([]);
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
   }, []);
 
-  // Update canvas size on resize
+  // Expose clear function globally
   useEffect(() => {
-    const handleResize = () => {
-      if (fabricCanvasRef.current && chartContainerRef.current) {
-        fabricCanvasRef.current.setDimensions({
-          width: chartContainerRef.current.clientWidth,
-          height: 500,
+    (window as any).clearChartDrawings = clearAllDrawings;
+  }, [clearAllDrawings]);
+
+  // Redraw all objects
+  const redrawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawnObjects.forEach(obj => {
+      ctx.strokeStyle = obj.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+
+      if (obj.type === 'trendline' && obj.points.length >= 2) {
+        ctx.moveTo(obj.points[0].x, obj.points[0].y);
+        ctx.lineTo(obj.points[1].x, obj.points[1].y);
+        ctx.stroke();
+      } else if (obj.type === 'horizontal' && obj.points.length >= 1) {
+        ctx.moveTo(0, obj.points[0].y);
+        ctx.lineTo(canvas.width, obj.points[0].y);
+        ctx.stroke();
+      } else if (obj.type === 'vertical' && obj.points.length >= 1) {
+        ctx.moveTo(obj.points[0].x, 0);
+        ctx.lineTo(obj.points[0].x, canvas.height);
+        ctx.stroke();
+      } else if (obj.type === 'brush' && obj.points.length >= 2) {
+        ctx.moveTo(obj.points[0].x, obj.points[0].y);
+        for (let i = 1; i < obj.points.length; i++) {
+          ctx.lineTo(obj.points[i].x, obj.points[i].y);
+        }
+        ctx.stroke();
+      } else if (obj.type === 'fibonacci' && obj.points.length >= 2) {
+        const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+        const colors = ['#ff5252', '#ffeb3b', '#4caf50', '#2196f3', '#9c27b0', '#ff9800', '#e91e63'];
+        const startY = obj.points[0].y;
+        const endY = obj.points[1].y;
+        
+        levels.forEach((level, i) => {
+          const y = startY + (endY - startY) * level;
+          ctx.strokeStyle = colors[i];
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          ctx.fillStyle = colors[i];
+          ctx.font = '10px sans-serif';
+          ctx.fillText(`${(level * 100).toFixed(1)}%`, 5, y - 2);
         });
+      } else if (obj.type === 'marker' && obj.points.length >= 1) {
+        ctx.fillStyle = obj.color;
+        ctx.font = '20px sans-serif';
+        ctx.fillText('📍', obj.points[0].x - 10, obj.points[0].y + 10);
+      }
+    });
+  }, [drawnObjects]);
+
+  useEffect(() => {
+    redrawCanvas();
+  }, [drawnObjects, redrawCanvas]);
+
+  // Handle canvas resize
+  useEffect(() => {
+    const resizeCanvas = () => {
+      const canvas = canvasRef.current;
+      const container = chartContainerRef.current;
+      if (canvas && container) {
+        canvas.width = container.clientWidth;
+        canvas.height = 500;
+        redrawCanvas();
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Handle drawing tool changes
-  useEffect(() => {
-    if (!fabricCanvasRef.current) return;
-    
-    const canvas = fabricCanvasRef.current;
-    canvas.selection = activeTool === "select";
-    canvas.isDrawingMode = activeTool === "brush";
-    
-    if (activeTool === "brush" && canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.color = '#2962ff';
-      canvas.freeDrawingBrush.width = 2;
-    }
-  }, [activeTool]);
-
-  // Clear drawings function
-  const clearAllDrawings = useCallback(() => {
-    if (fabricCanvasRef.current) {
-      fabricCanvasRef.current.clear();
-    }
-  }, []);
-
-  // Expose clear function
-  useEffect(() => {
-    if (onClearDrawings) {
-      // This creates a way for parent to trigger clear
-    }
-  }, [onClearDrawings]);
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    return () => window.removeEventListener('resize', resizeCanvas);
+  }, [redrawCanvas]);
 
   // Mouse handlers for drawing
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!fabricCanvasRef.current || activeTool === "select" || activeTool === "brush") return;
+    if (activeTool === "select") return;
     
-    const canvas = fabricCanvasRef.current;
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
@@ -287,81 +322,135 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
     setDrawStart({ x, y });
 
     if (activeTool === "marker") {
-      const text = new IText('📍', {
-        left: x,
-        top: y,
-        fontSize: 24,
-        selectable: true,
-      });
-      canvas.add(text);
-      canvas.renderAll();
+      setDrawnObjects(prev => [...prev, {
+        type: 'marker',
+        points: [{ x, y }],
+        color: '#2962ff'
+      }]);
+      setIsDrawing(false);
       return;
     }
 
-    // Create initial line for trendline, horizontal, vertical
-    const lineConfig = {
-      stroke: activeTool === "fibonacci" ? '#ffeb3b' : '#2962ff',
-      strokeWidth: 2,
-      selectable: true,
-      evented: true,
-    };
-
-    let line: Line;
     if (activeTool === "horizontal") {
-      line = new Line([0, y, canvas.width || 800, y], lineConfig);
-    } else if (activeTool === "vertical") {
-      line = new Line([x, 0, x, canvas.height || 500], lineConfig);
-    } else {
-      line = new Line([x, y, x, y], lineConfig);
+      setDrawnObjects(prev => [...prev, {
+        type: 'horizontal',
+        points: [{ x, y }],
+        color: '#2962ff'
+      }]);
+      setIsDrawing(false);
+      return;
     }
-    
-    canvas.add(line);
-    setCurrentLine(line);
+
+    if (activeTool === "vertical") {
+      setDrawnObjects(prev => [...prev, {
+        type: 'vertical',
+        points: [{ x, y }],
+        color: '#2962ff'
+      }]);
+      setIsDrawing(false);
+      return;
+    }
+
+    if (activeTool === "brush") {
+      setCurrentPath([{ x, y }]);
+    }
   }, [activeTool]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDrawing || !currentLine || !canvasRef.current || activeTool === "horizontal" || activeTool === "vertical") return;
+    if (!isDrawing || !drawStart) return;
     
-    const rect = canvasRef.current.getBoundingClientRect();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    currentLine.set({ x2: x, y2: y });
-    fabricCanvasRef.current?.renderAll();
+    // Redraw existing objects
+    redrawCanvas();
 
-    // Draw fibonacci levels
-    if (activeTool === "fibonacci" && drawStart) {
-      // Remove old fib lines
-      const objects = fabricCanvasRef.current?.getObjects() || [];
-      objects.forEach(obj => {
-        if ((obj as any).isFibLevel) {
-          fabricCanvasRef.current?.remove(obj);
+    if (activeTool === "brush") {
+      setCurrentPath(prev => [...prev, { x, y }]);
+      
+      // Draw current path
+      ctx.strokeStyle = '#2962ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const fullPath = [...currentPath, { x, y }];
+      if (fullPath.length > 0) {
+        ctx.moveTo(fullPath[0].x, fullPath[0].y);
+        for (let i = 1; i < fullPath.length; i++) {
+          ctx.lineTo(fullPath[i].x, fullPath[i].y);
         }
-      });
-
+        ctx.stroke();
+      }
+    } else if (activeTool === "trendline") {
+      ctx.strokeStyle = '#2962ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(drawStart.x, drawStart.y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    } else if (activeTool === "fibonacci") {
       const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
       const colors = ['#ff5252', '#ffeb3b', '#4caf50', '#2196f3', '#9c27b0', '#ff9800', '#e91e63'];
       
       levels.forEach((level, i) => {
         const levelY = drawStart.y + (y - drawStart.y) * level;
-        const fibLine = new Line([0, levelY, fabricCanvasRef.current?.width || 800, levelY], {
-          stroke: colors[i],
-          strokeWidth: 1,
-          strokeDashArray: [5, 5],
-          selectable: false,
-          evented: false,
-        });
-        (fibLine as any).isFibLevel = true;
-        fabricCanvasRef.current?.add(fibLine);
+        ctx.strokeStyle = colors[i];
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(0, levelY);
+        ctx.lineTo(canvas.width, levelY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = colors[i];
+        ctx.font = '10px sans-serif';
+        ctx.fillText(`${(level * 100).toFixed(1)}%`, 5, levelY - 2);
       });
     }
-  }, [isDrawing, currentLine, activeTool, drawStart]);
+  }, [isDrawing, drawStart, activeTool, currentPath, redrawCanvas]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (!isDrawing || !drawStart) {
+      setIsDrawing(false);
+      return;
+    }
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (activeTool === "trendline") {
+      setDrawnObjects(prev => [...prev, {
+        type: 'trendline',
+        points: [drawStart, { x, y }],
+        color: '#2962ff'
+      }]);
+    } else if (activeTool === "fibonacci") {
+      setDrawnObjects(prev => [...prev, {
+        type: 'fibonacci',
+        points: [drawStart, { x, y }],
+        color: '#ffeb3b'
+      }]);
+    } else if (activeTool === "brush") {
+      setDrawnObjects(prev => [...prev, {
+        type: 'brush',
+        points: [...currentPath, { x, y }],
+        color: '#2962ff'
+      }]);
+      setCurrentPath([]);
+    }
+
     setIsDrawing(false);
-    setCurrentLine(null);
     setDrawStart(null);
-  }, []);
+  }, [isDrawing, drawStart, activeTool, currentPath]);
 
   useEffect(() => {
     if (!chartContainerRef.current || !volumeContainerRef.current || 
@@ -371,14 +460,14 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
     const gridColor = chartSettings?.colors.gridLines || '#2a2e39';
     const textColor = '#d1d4dc';
 
-    // Main candlestick chart - no watermark
+    // Main candlestick chart
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: 500,
       layout: {
         background: { color: bgColor },
         textColor: textColor,
-        attributionLogo: false, // Remove TradingView logo
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: gridColor },
@@ -515,13 +604,6 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
       priceFormat: { type: 'volume' },
     });
 
-    candleSeriesRef.current = candleSeries;
-    volumeSeriesRef.current = volumeSeries;
-    rsiSeriesRef.current = rsiSeries;
-    macdSeriesRef.current = macdSeries;
-    macdSignalSeriesRef.current = macdSignalSeries;
-    macdHistogramSeriesRef.current = macdHistogramSeries;
-
     // Generate 1 year of daily data
     const candleData = generateCandleData(basePrice, 365);
     const volumeData = generateVolumeData(candleData);
@@ -588,18 +670,13 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
     };
   }, [marketId, basePrice, chartSettings, loading]);
 
-  // Expose clear function to parent
-  useEffect(() => {
-    (window as any).clearChartDrawings = clearAllDrawings;
-  }, [clearAllDrawings]);
-
   return (
     <div className="w-full h-full flex flex-col">
       <div className="relative">
         <div ref={chartContainerRef} className="w-full" />
         <canvas
           ref={canvasRef}
-          className="absolute top-0 left-0 pointer-events-auto"
+          className="absolute top-0 left-0"
           style={{ 
             cursor: activeTool === "select" ? "default" : "crosshair",
             pointerEvents: activeTool === "select" ? "none" : "auto"
