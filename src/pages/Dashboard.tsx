@@ -6,6 +6,7 @@ import { MarketDetailPanel } from "@/components/trading/MarketDetailPanel";
 import { ChartTopToolbar } from "@/components/trading/ChartTopToolbar";
 import { ChartSettings, useChartSettings } from "@/components/trading/ChartSettings";
 import { fetchAllMarketData, MarketDataResponse } from "@/services/marketDataService";
+import TradingPanel from "@/components/dashboard/TradingPanel";
 
 const marketNames: Record<string, string> = {
   btc: "Bitcoin (BTC/USD)",
@@ -46,7 +47,6 @@ const Dashboard = () => {
       const data = await fetchAllMarketData();
       setMarketData(data);
       
-      // Find the current selected market
       const market = data.find(m => m.id === selectedMarket);
       if (market) {
         setCurrentMarket(market);
@@ -54,7 +54,6 @@ const Dashboard = () => {
     };
 
     loadMarketData();
-    // Refresh every 30 seconds
     const interval = setInterval(loadMarketData, 30000);
     return () => clearInterval(interval);
   }, [selectedMarket]);
@@ -67,11 +66,10 @@ const Dashboard = () => {
     }
   }, [selectedMarket, marketData]);
 
-  // Dummy state for toolbar props
   const [selectedTimeframe, setSelectedTimeframe] = useState({ 
-    label: "1m", 
-    value: 60000, 
-    display: "1 Minute" 
+    label: "1D", 
+    value: 86400000, 
+    display: "1 Day" 
   });
   const [indicators, setIndicators] = useState({
     ma20: { enabled: true },
@@ -90,7 +88,9 @@ const Dashboard = () => {
   };
 
   const handleClearDrawings = () => {
-    console.log("Clear all drawings");
+    if ((window as any).clearChartDrawings) {
+      (window as any).clearChartDrawings();
+    }
   };
 
   return (
@@ -126,6 +126,8 @@ const Dashboard = () => {
               marketId={selectedMarket}
               marketName={marketNames[selectedMarket] || "Market"}
               chartSettings={chartSettings}
+              activeTool={activeTool}
+              onClearDrawings={handleClearDrawings}
             />
           </div>
 
@@ -142,23 +144,28 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Right: Watchlist + Market Detail */}
-        <div className="w-80 flex-shrink-0 flex flex-col bg-[hsl(222,47%,11%)] border-l border-[hsl(215,16%,20%)]">
-          {/* Watchlist - 60% */}
-          <div className="flex-[3] min-h-0">
+        {/* Right Panel: Watchlist + Market Detail + Trading Panel */}
+        <div className="w-96 flex-shrink-0 flex flex-col bg-[hsl(222,47%,11%)] border-l border-[hsl(215,16%,20%)]">
+          {/* Watchlist */}
+          <div className="flex-[2] min-h-0 overflow-auto">
             <WatchlistPanel
               selectedMarket={selectedMarket}
               onMarketSelect={setSelectedMarket}
             />
           </div>
           
-          {/* Market Detail - 40% */}
-          <div className="flex-[2] min-h-0">
+          {/* Market Detail */}
+          <div className="flex-[1] min-h-0 border-t border-[hsl(215,16%,20%)]">
             <MarketDetailPanel
               marketName={marketNames[selectedMarket] || "Market"}
               currentPrice={currentMarket?.price || 0}
               priceChange={currentMarket?.change || 0}
             />
+          </div>
+
+          {/* Trading Panel - Buy/Sell with AI and Manual modes */}
+          <div className="flex-[2] min-h-0 border-t border-[hsl(215,16%,20%)] overflow-auto p-3">
+            <TradingPanel onAutoTradingChange={setIsAutoTradingEnabled} />
           </div>
         </div>
       </div>
