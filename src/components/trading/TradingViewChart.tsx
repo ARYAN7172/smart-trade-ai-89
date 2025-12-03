@@ -167,13 +167,18 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
   const macdChartRef = useRef<IChartApi | null>(null);
 
   const [basePrice, setBasePrice] = useState<number>(100);
+  const [livePrice, setLivePrice] = useState<number>(100);
   const [loading, setLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null);
   const [drawnObjects, setDrawnObjects] = useState<DrawnObject[]>([]);
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
+  
+  const candleSeriesRef = useRef<any>(null);
+  const volumeSeriesRef = useRef<any>(null);
+  const lastCandleRef = useRef<CandlestickData | null>(null);
 
-  // Fetch real market data
+// Fetch real market data and update live
   useEffect(() => {
     const loadMarketPrice = async () => {
       try {
@@ -182,6 +187,7 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
         
         if (market) {
           setBasePrice(market.price);
+          setLivePrice(market.price);
         } else {
           const fallbackPrices: Record<string, number> = {
             btc: 97000, eth: 3600, sol: 190, ada: 1.05, xrp: 2.35,
@@ -190,6 +196,7 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
             sp500: 6050, nasdaq: 21500, dow: 44800, nifty: 24500, banknifty: 52000
           };
           setBasePrice(fallbackPrices[marketId] || 100);
+          setLivePrice(fallbackPrices[marketId] || 100);
         }
       } catch (error) {
         console.error('Error loading market price:', error);
@@ -200,12 +207,16 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
           sp500: 6050, nasdaq: 21500, dow: 44800, nifty: 24500, banknifty: 52000
         };
         setBasePrice(fallbackPrices[marketId] || 100);
+        setLivePrice(fallbackPrices[marketId] || 100);
       } finally {
         setLoading(false);
       }
     };
 
     loadMarketPrice();
+    // Poll every 5 seconds for live updates
+    const interval = setInterval(loadMarketPrice, 5000);
+    return () => clearInterval(interval);
   }, [marketId]);
 
   // Clear drawings function
@@ -578,11 +589,13 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
       wickUpColor: chartSettings?.colors.bullish || '#26a69a',
       wickDownColor: chartSettings?.colors.bearish || '#ef5350',
     });
+    candleSeriesRef.current = candleSeries;
 
     const volumeSeries = volumeChart.addSeries(HistogramSeries, {
       priceFormat: { type: 'volume' },
       priceScaleId: '',
     });
+    volumeSeriesRef.current = volumeSeries;
 
     const rsiSeries = rsiChart.addSeries(LineSeries, {
       color: '#2962ff',
@@ -604,9 +617,12 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
       priceFormat: { type: 'volume' },
     });
 
-    // Generate 1 year of daily data
+    // Generate 1 year of daily data ending at current price
     const candleData = generateCandleData(basePrice, 365);
     const volumeData = generateVolumeData(candleData);
+    
+    // Store last candle for live updates
+    lastCandleRef.current = candleData[candleData.length - 1];
     
     candleSeries.setData(candleData);
     volumeSeries.setData(volumeData);
@@ -663,12 +679,39 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      candleSeriesRef.current = null;
+      volumeSeriesRef.current = null;
       chart.remove();
       volumeChart.remove();
       rsiChart.remove();
       macdChart.remove();
     };
   }, [marketId, basePrice, chartSettings, loading]);
+
+  // Live price update effect - updates last candle in real-time
+  useEffect(() => {
+    if (!candleSeriesRef.current || !volumeSeriesRef.current || !lastCandleRef.current || loading) return;
+    
+    const lastCandle = lastCandleRef.current;
+    const updatedCandle: CandlestickData = {
+      time: lastCandle.time,
+      open: lastCandle.open,
+      high: Math.max(lastCandle.high, livePrice),
+      low: Math.min(lastCandle.low, livePrice),
+      close: livePrice,
+    };
+    
+    candleSeriesRef.current.update(updatedCandle);
+    lastCandleRef.current = updatedCandle;
+    
+    // Update volume with new color
+    const volumeUpdate: HistogramData = {
+      time: lastCandle.time,
+      value: Math.random() * 50000000 + 10000000,
+      color: livePrice >= (lastCandle.open ?? 0) ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
+    };
+    volumeSeriesRef.current.update(volumeUpdate);
+  }, [livePrice, loading]);
 
   return (
     <div className="w-full h-full flex flex-col">
