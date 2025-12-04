@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TrendingUp, Mail, Lock } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import tradexLogo from "@/assets/tradex-logo.png";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -38,11 +39,8 @@ const Login = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-cyber relative overflow-hidden p-12 flex-col justify-between">
         <div className="absolute inset-0 bg-background/30 backdrop-blur-sm"></div>
         <div className="relative z-10">
-          <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center">
-              <TrendingUp className="w-7 h-7 text-primary" />
-            </div>
-            <span className="text-3xl font-bold text-background">TRADEX</span>
+          <Link to="/" className="flex items-center gap-3 mb-8">
+            <img src={tradexLogo} alt="TRADEX Logo" className="w-48 h-auto" />
           </Link>
           <div className="mt-20">
             <h1 className="text-5xl font-bold text-background mb-4">
