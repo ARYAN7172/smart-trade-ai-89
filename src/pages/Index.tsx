@@ -1,90 +1,224 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, LogIn, LayoutDashboard } from "lucide-react";
-import { MarketSelector } from "@/components/trading/MarketSelector";
-import { AdvancedCandlestickChart } from "@/components/trading/AdvancedCandlestickChart";
-
-const marketNames: Record<string, string> = {
-  btc: "Bitcoin (BTC/USD)",
-  eth: "Ethereum (ETH/USD)",
-  sol: "Solana (SOL/USD)",
-  ada: "Cardano (ADA/USD)",
-  xrp: "Ripple (XRP/USD)",
-  doge: "Dogecoin (DOGE/USD)",
-  dot: "Polkadot (DOT/USD)",
-  avax: "Avalanche (AVAX/USD)",
-  gold: "Gold (XAU/USD)",
-  silver: "Silver (XAG/USD)",
-  oil: "Crude Oil (WTI/USD)",
-  eurusd: "Euro/Dollar (EUR/USD)",
-  gbpusd: "Pound/Dollar (GBP/USD)",
-  usdjpy: "Dollar/Yen (USD/JPY)",
-  audusd: "Aussie/Dollar (AUD/USD)",
-  usdcad: "Dollar/Loonie (USD/CAD)",
-  gbpjpy: "Pound/Yen (GBP/JPY)",
-  sp500: "S&P 500 Index",
-  nasdaq: "NASDAQ Index",
-  dow: "Dow Jones Index",
-  nifty: "NIFTY 50",
-  banknifty: "Bank NIFTY",
-};
+import { TrendingUp, ArrowRight, Bot, BarChart3, Shield, Zap, LineChart, Users } from "lucide-react";
 
 const Index = () => {
-  const [selectedMarket, setSelectedMarket] = useState("btc");
   const navigate = useNavigate();
+
+  const stats = [
+    { value: "98.5%", label: "Accuracy Rate", color: "text-primary" },
+    { value: "$2.5M+", label: "Trading Volume", color: "text-secondary" },
+    { value: "10K+", label: "Active Traders", color: "text-accent" },
+  ];
+
+  const features = [
+    {
+      icon: Bot,
+      title: "AI-Powered Analysis",
+      description: "Our advanced AI analyzes market patterns and executes trades automatically using Smart Money Concepts.",
+    },
+    {
+      icon: LineChart,
+      title: "Advanced Charting",
+      description: "Professional TradingView-style charts with Fibonacci, trendlines, and multi-timeframe analysis.",
+    },
+    {
+      icon: BarChart3,
+      title: "Multi-Market Support",
+      description: "Trade crypto, forex, commodities, and indices with real-time data across multiple timeframes.",
+    },
+    {
+      icon: Zap,
+      title: "Smart Execution",
+      description: "Lightning-fast order execution with AI-optimized entry and exit points based on market conditions.",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top Navigation */}
-      <nav className="border-b border-border bg-card sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      {/* Navigation */}
+      <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-cyber flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-background" />
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold gradient-text">TRADEX PRO</span>
+            <span className="text-xl font-bold text-primary">TRADEX</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/dashboard")}
-              className="gap-2"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate("/login")}>
+              Login
             </Button>
             <Button 
-              size="sm" 
-              onClick={() => navigate("/login")}
-              className="bg-gradient-primary hover:opacity-90 border-0 shadow-glow-cyan gap-2"
+              onClick={() => navigate("/trade")}
+              className="bg-primary hover:bg-primary/90 gap-2"
             >
-              <LogIn className="w-4 h-4" />
-              Login
+              Get Started <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </nav>
 
-      {/* Main Trading View */}
-      <div className="flex-1 container mx-auto px-4 py-4 flex gap-4 min-h-0 overflow-hidden">
-        {/* Market Selector Sidebar */}
-        <div className="w-80 flex-shrink-0">
-          <MarketSelector
-            selectedMarket={selectedMarket}
-            onMarketSelect={setSelectedMarket}
-          />
+      {/* Hero Section */}
+      <section className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center relative overflow-hidden">
+        {/* Background gradient effects */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <div className="inline-block px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium mb-8">
+            AI-Powered Trading Platform
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            Trade Smarter with{" "}
+            <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              AI Intelligence
+            </span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+            Experience the future of trading with our advanced AI bot that analyzes market patterns, 
+            executes trades, and maximizes your profits using Smart Money Concepts.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              onClick={() => navigate("/trade")}
+              className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 gap-2"
+            >
+              Start Trading Free <ArrowRight className="w-5 h-5" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => navigate("/dashboard")}
+              className="text-lg px-8 py-6 border-border hover:bg-muted"
+            >
+              View Dashboard
+            </Button>
+          </div>
         </div>
+      </section>
 
-        {/* Chart Area */}
-        <div className="flex-1 min-w-0 overflow-auto">
-          <AdvancedCandlestickChart
-            marketId={selectedMarket}
-            marketName={marketNames[selectedMarket] || "Market"}
-          />
+      {/* Stats Section */}
+      <section className="py-16 border-y border-border bg-card/30">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
+                <div className={`text-4xl md:text-5xl font-bold mb-2 ${stat.color}`}>
+                  {stat.value}
+                </div>
+                <div className="text-muted-foreground">{stat.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Why Choose <span className="text-primary">TRADEX PRO</span>?
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Powerful features designed to give you the edge in any market condition
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
+              <div 
+                key={index} 
+                className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all duration-300 group"
+              >
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <feature.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="py-20 px-6 bg-card/30 border-y border-border">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              About <span className="text-primary">TRADEX PRO</span>
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Shield className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold mb-1">Secure & Reliable</h3>
+                  <p className="text-muted-foreground text-sm">Enterprise-grade security with encrypted data transmission and secure API connections to major exchanges.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Users className="w-6 h-6 text-secondary mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold mb-1">Community Driven</h3>
+                  <p className="text-muted-foreground text-sm">Join thousands of traders sharing strategies, insights, and real-time market analysis.</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Bot className="w-6 h-6 text-accent mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold mb-1">Smart Money AI</h3>
+                  <p className="text-muted-foreground text-sm">Our AI identifies institutional order flow, liquidity zones, and optimal entry points automatically.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <BarChart3 className="w-6 h-6 text-success mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold mb-1">Real-Time Analytics</h3>
+                  <p className="text-muted-foreground text-sm">Live market data with candlestick charts, volume analysis, RSI, MACD, and custom indicators.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 pointer-events-none" />
+        <div className="container mx-auto text-center relative z-10">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Ready to Transform Your Trading?
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto mb-8">
+            Join thousands of traders using AI to maximize their profits
+          </p>
+          <Button 
+            size="lg" 
+            onClick={() => navigate("/trade")}
+            className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 gap-2"
+          >
+            Get Started Now <ArrowRight className="w-5 h-5" />
+          </Button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 px-6 border-t border-border bg-card/30">
+        <div className="container mx-auto text-center text-muted-foreground text-sm">
+          © {new Date().getFullYear()} TRADEX PRO. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 };
