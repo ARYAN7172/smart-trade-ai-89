@@ -75,8 +75,11 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
         selection: activeTool === "select",
       });
 
-      canvas.freeDrawingBrush.color = "#2962ff";
-      canvas.freeDrawingBrush.width = 2;
+      // Initialize brush only if it exists
+      if (canvas.freeDrawingBrush) {
+        canvas.freeDrawingBrush.color = "#2962ff";
+        canvas.freeDrawingBrush.width = 2;
+      }
 
       fabricRef.current = canvas;
 
@@ -101,7 +104,7 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
       fabricRef.current.isDrawingMode = activeTool === "brush";
       fabricRef.current.selection = activeTool === "select";
 
-      if (activeTool === "brush") {
+      if (activeTool === "brush" && fabricRef.current.freeDrawingBrush) {
         fabricRef.current.freeDrawingBrush.color = "#2962ff";
         fabricRef.current.freeDrawingBrush.width = 2;
       }
