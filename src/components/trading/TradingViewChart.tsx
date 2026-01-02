@@ -77,6 +77,65 @@ const calculateEMA = (data: (number | null)[], period: number): (number | null)[
   return result;
 };
 
+// Simple Moving Average calculation
+const calculateSMA = (data: number[], period: number): (number | null)[] => {
+  const result: (number | null)[] = [];
+  
+  for (let i = 0; i < data.length; i++) {
+    if (i < period - 1) {
+      result.push(null);
+    } else {
+      const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+      result.push(sum / period);
+    }
+  }
+  return result;
+};
+
+// Bollinger Bands calculation
+const calculateBollingerBands = (data: number[], period: number = 20, stdDev: number = 2) => {
+  const sma = calculateSMA(data, period);
+  const upper: (number | null)[] = [];
+  const lower: (number | null)[] = [];
+  
+  for (let i = 0; i < data.length; i++) {
+    if (sma[i] === null) {
+      upper.push(null);
+      lower.push(null);
+    } else {
+      const slice = data.slice(Math.max(0, i - period + 1), i + 1);
+      const mean = sma[i]!;
+      const variance = slice.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / slice.length;
+      const std = Math.sqrt(variance);
+      upper.push(mean + stdDev * std);
+      lower.push(mean - stdDev * std);
+    }
+  }
+  
+  return { middle: sma, upper, lower };
+};
+
+// VWAP calculation (approximation without actual volume weighting per tick)
+const calculateVWAP = (candleData: CandlestickData[]): (number | null)[] => {
+  const result: (number | null)[] = [];
+  let cumulativeTPV = 0;
+  let cumulativeVolume = 0;
+  
+  for (let i = 0; i < candleData.length; i++) {
+    const c = candleData[i];
+    const typicalPrice = ((c.high ?? 0) + (c.low ?? 0) + (c.close ?? 0)) / 3;
+    // Simulate volume based on price range
+    const volume = Math.abs((c.high ?? 0) - (c.low ?? 0)) * 1000000 + 1000000;
+    
+    cumulativeTPV += typicalPrice * volume;
+    cumulativeVolume += volume;
+    
+    result.push(cumulativeTPV / cumulativeVolume);
+  }
+  
+  return result;
+};
+
 const calculateMACD = (data: number[], fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) => {
   const emaFast = calculateEMA(data, fastPeriod);
   const emaSlow = calculateEMA(data, slowPeriod);
@@ -166,6 +225,11 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState<TimeframeType>('1h');
   const [chartWidth, setChartWidth] = useState(800);
+  const [showMA9, setShowMA9] = useState(true);
+  const [showMA45, setShowMA45] = useState(true);
+  const [showEMA20, setShowEMA20] = useState(true);
+  const [showBB, setShowBB] = useState(false);
+  const [showVWAP, setShowVWAP] = useState(false);
 
   const isCrypto = BINANCE_SYMBOLS[marketId] !== undefined;
   const binanceSymbol = BINANCE_SYMBOLS[marketId];
@@ -304,7 +368,24 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
     const volumeSeries = volumeChart.addSeries(HistogramSeries, { priceFormat: { type: 'volume' }, priceScaleId: '' });
     volumeSeriesRef.current = volumeSeries;
 
+    // Moving Averages on main chart
+    const ma9Series = chart.addSeries(LineSeries, { color: '#f7931a', lineWidth: 2, title: 'MA 9' });
+    const ma45Series = chart.addSeries(LineSeries, { color: '#627eea', lineWidth: 2, title: 'MA 45' });
+    const ema20Series = chart.addSeries(LineSeries, { color: '#26a69a', lineWidth: 1, title: 'EMA 20' });
+    
+    // Bollinger Bands
+    const bbUpperSeries = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1, lineStyle: 2, title: 'BB Upper' });
+    const bbMiddleSeries = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1, title: 'BB Middle' });
+    const bbLowerSeries = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1, lineStyle: 2, title: 'BB Lower' });
+    
+    // VWAP
+    const vwapSeries = chart.addSeries(LineSeries, { color: '#ff5722', lineWidth: 2, lineStyle: 0, title: 'VWAP' });
+
     const rsiSeries = rsiChart.addSeries(LineSeries, { color: '#2962ff', lineWidth: 2 });
+    // RSI Overbought/Oversold lines
+    const rsiOverbought = rsiChart.addSeries(LineSeries, { color: '#ef5350', lineWidth: 1, lineStyle: 2 });
+    const rsiOversold = rsiChart.addSeries(LineSeries, { color: '#26a69a', lineWidth: 1, lineStyle: 2 });
+    
     const macdSeries = macdChart.addSeries(LineSeries, { color: '#2962ff', lineWidth: 2 });
     const macdSignalSeries = macdChart.addSeries(LineSeries, { color: '#ff6d00', lineWidth: 2 });
     const macdHistSeries = macdChart.addSeries(HistogramSeries, { priceFormat: { type: 'volume' } });
@@ -330,8 +411,41 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
       volumeSeries.setData(volumeData);
 
       const closes = candleData.map(d => d.close ?? 0);
+      
+      // Calculate and set Moving Averages
+      const ma9Values = calculateSMA(closes, 9);
+      const ma45Values = calculateSMA(closes, 45);
+      const ema20Values = calculateEMA(closes, 20);
+      
+      if (showMA9) {
+        ma9Series.setData(candleData.map((d, i) => ({ time: d.time, value: ma9Values[i] })).filter(d => d.value !== null) as LineData[]);
+      }
+      if (showMA45) {
+        ma45Series.setData(candleData.map((d, i) => ({ time: d.time, value: ma45Values[i] })).filter(d => d.value !== null) as LineData[]);
+      }
+      if (showEMA20) {
+        ema20Series.setData(candleData.map((d, i) => ({ time: d.time, value: ema20Values[i] })).filter(d => d.value !== null) as LineData[]);
+      }
+      
+      // Bollinger Bands
+      if (showBB) {
+        const { middle, upper, lower } = calculateBollingerBands(closes, 20, 2);
+        bbUpperSeries.setData(candleData.map((d, i) => ({ time: d.time, value: upper[i] })).filter(d => d.value !== null) as LineData[]);
+        bbMiddleSeries.setData(candleData.map((d, i) => ({ time: d.time, value: middle[i] })).filter(d => d.value !== null) as LineData[]);
+        bbLowerSeries.setData(candleData.map((d, i) => ({ time: d.time, value: lower[i] })).filter(d => d.value !== null) as LineData[]);
+      }
+      
+      // VWAP
+      if (showVWAP) {
+        const vwapValues = calculateVWAP(candleData);
+        vwapSeries.setData(candleData.map((d, i) => ({ time: d.time, value: vwapValues[i] })).filter(d => d.value !== null) as LineData[]);
+      }
+      
+      // RSI with overbought/oversold
       const rsiValues = calculateRSI(closes);
       rsiSeries.setData(candleData.map((d, i) => ({ time: d.time, value: rsiValues[i] ?? 50 })).filter(d => d.value !== null) as LineData[]);
+      rsiOverbought.setData(candleData.map(d => ({ time: d.time, value: 70 })) as LineData[]);
+      rsiOversold.setData(candleData.map(d => ({ time: d.time, value: 30 })) as LineData[]);
 
       const { macdLine, signalLine, histogram } = calculateMACD(closes);
       macdSeries.setData(candleData.map((d, i) => ({ time: d.time, value: macdLine[i] ?? 0 })).filter(d => d.value !== null) as LineData[]);
@@ -368,9 +482,17 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
       rsiChart.remove();
       macdChart.remove();
     };
-  }, [marketId, basePrice, chartSettings, loading, timeframe, isCrypto, binanceSymbol]);
+  }, [marketId, basePrice, chartSettings, loading, timeframe, isCrypto, binanceSymbol, showMA9, showMA45, showEMA20, showBB, showVWAP]);
 
   const timeframes: TimeframeType[] = ['1m', '5m', '15m', '1h', '4h', '1D'];
+
+  const indicators = [
+    { id: 'ma9', label: 'MA 9', color: '#f7931a', active: showMA9, toggle: () => setShowMA9(!showMA9) },
+    { id: 'ma45', label: 'MA 45', color: '#627eea', active: showMA45, toggle: () => setShowMA45(!showMA45) },
+    { id: 'ema20', label: 'EMA 20', color: '#26a69a', active: showEMA20, toggle: () => setShowEMA20(!showEMA20) },
+    { id: 'bb', label: 'BB', color: '#9c27b0', active: showBB, toggle: () => setShowBB(!showBB) },
+    { id: 'vwap', label: 'VWAP', color: '#ff5722', active: showVWAP, toggle: () => setShowVWAP(!showVWAP) },
+  ];
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -402,6 +524,28 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
           )}
         </div>
       </div>
+
+      {/* Indicators Selector */}
+      <div className="flex items-center gap-1 px-2 py-2 bg-[#131722] border-b border-[#2a2e39]">
+        <span className="text-xs text-muted-foreground mr-2">Indicators:</span>
+        {indicators.map((ind) => (
+          <button
+            key={ind.id}
+            onClick={ind.toggle}
+            className={`px-2 py-1 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${
+              ind.active
+                ? 'bg-[#2a2e39] text-white border border-[#3a3e49]'
+                : 'bg-transparent text-[#6a6d78] hover:text-[#d1d4dc] hover:bg-[#2a2e39]/50'
+            }`}
+          >
+            <span 
+              className="w-2 h-2 rounded-full" 
+              style={{ backgroundColor: ind.active ? ind.color : '#4a4d58' }}
+            />
+            {ind.label}
+          </button>
+        ))}
+      </div>
       
       <div className="relative flex-1">
         <div ref={chartContainerRef} className="w-full" />
@@ -417,11 +561,22 @@ export const TradingViewChart = ({ marketId, marketName, chartSettings, activeTo
         <div ref={volumeContainerRef} className="w-full" />
       </div>
       <div className="w-full border-t border-[#2a2e39] pt-2">
-        <div className="px-2 text-xs text-[#d1d4dc] mb-1">RSI</div>
+        <div className="px-2 text-xs text-[#d1d4dc] mb-1 flex items-center gap-2">
+          RSI (14)
+          <span className="text-[10px] text-muted-foreground">
+            <span className="text-[#ef5350]">70</span> / <span className="text-[#26a69a]">30</span>
+          </span>
+        </div>
         <div ref={rsiContainerRef} className="w-full" />
       </div>
       <div className="w-full border-t border-[#2a2e39] pt-2">
-        <div className="px-2 text-xs text-[#d1d4dc] mb-1">MACD</div>
+        <div className="px-2 text-xs text-[#d1d4dc] mb-1 flex items-center gap-2">
+          MACD (12, 26, 9)
+          <span className="text-[10px]">
+            <span className="text-[#2962ff]">●</span> MACD
+            <span className="text-[#ff6d00] ml-1">●</span> Signal
+          </span>
+        </div>
         <div ref={macdContainerRef} className="w-full" />
       </div>
     </div>
