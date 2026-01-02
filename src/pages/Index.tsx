@@ -1,6 +1,35 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, ArrowRight, Bot, BarChart3, Shield, Zap, LineChart, Users } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useRef } from "react";
+
+// Animated section wrapper
+const AnimatedSection = ({ 
+  children, 
+  className = "", 
+  delay = 0 
+}: { 
+  children: React.ReactNode; 
+  className?: string; 
+  delay?: number;
+}) => {
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
+  
+  return (
+    <section
+      ref={ref as React.RefObject<HTMLElement>}
+      className={`transition-all duration-700 ease-out ${className}`}
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? "translateY(0)" : "translateY(40px)",
+        transitionDelay: `${delay}ms`,
+      }}
+    >
+      {children}
+    </section>
+  );
+};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -60,14 +89,14 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center relative overflow-hidden">
+      <AnimatedSection className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center relative overflow-hidden">
         {/* Background gradient effects */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 max-w-4xl mx-auto">
-          <div className="inline-block px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium mb-8">
+          <div className="inline-block px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium mb-8 animate-fade-in">
             AI-Powered Trading Platform
           </div>
           
@@ -87,7 +116,7 @@ const Index = () => {
             <Button 
               size="lg" 
               onClick={() => navigate("/trade")}
-              className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 gap-2"
+              className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 gap-2 hover-scale"
             >
               Start Trading Free <ArrowRight className="w-5 h-5" />
             </Button>
@@ -95,20 +124,24 @@ const Index = () => {
               size="lg" 
               variant="outline"
               onClick={() => navigate("/dashboard")}
-              className="text-lg px-8 py-6 border-border hover:bg-muted"
+              className="text-lg px-8 py-6 border-border hover:bg-muted hover-scale"
             >
               View Dashboard
             </Button>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Stats Section */}
-      <section className="py-16 border-y border-border bg-card/30">
+      <AnimatedSection className="py-16 border-y border-border bg-card/30" delay={100}>
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
+              <div 
+                key={index} 
+                className="text-center p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all duration-300 hover-scale"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
                 <div className={`text-4xl md:text-5xl font-bold mb-2 ${stat.color}`}>
                   {stat.value}
                 </div>
@@ -117,10 +150,10 @@ const Index = () => {
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Features Section */}
-      <section className="py-20 px-6">
+      <AnimatedSection className="py-20 px-6" delay={150}>
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -135,9 +168,10 @@ const Index = () => {
             {features.map((feature, index) => (
               <div 
                 key={index} 
-                className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all duration-300 group"
+                className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all duration-300 group hover:-translate-y-2"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300">
                   <feature.icon className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
@@ -146,10 +180,10 @@ const Index = () => {
             ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* About Section */}
-      <section className="py-20 px-6 bg-card/30 border-y border-border">
+      <AnimatedSection className="py-20 px-6 bg-card/30 border-y border-border" delay={200}>
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -158,14 +192,14 @@ const Index = () => {
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 p-4 rounded-lg hover:bg-muted/50 transition-colors">
                 <Shield className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold mb-1">Secure & Reliable</h3>
                   <p className="text-muted-foreground text-sm">Enterprise-grade security with encrypted data transmission and secure API connections to major exchanges.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 p-4 rounded-lg hover:bg-muted/50 transition-colors">
                 <Users className="w-6 h-6 text-secondary mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold mb-1">Community Driven</h3>
@@ -174,14 +208,14 @@ const Index = () => {
               </div>
             </div>
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 p-4 rounded-lg hover:bg-muted/50 transition-colors">
                 <Bot className="w-6 h-6 text-accent mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold mb-1">Smart Money AI</h3>
                   <p className="text-muted-foreground text-sm">Our AI identifies institutional order flow, liquidity zones, and optimal entry points automatically.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 p-4 rounded-lg hover:bg-muted/50 transition-colors">
                 <BarChart3 className="w-6 h-6 text-success mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold mb-1">Real-Time Analytics</h3>
@@ -191,10 +225,10 @@ const Index = () => {
             </div>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 relative overflow-hidden">
+      <AnimatedSection className="py-20 px-6 relative overflow-hidden" delay={250}>
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 pointer-events-none" />
         <div className="container mx-auto text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -206,12 +240,12 @@ const Index = () => {
           <Button 
             size="lg" 
             onClick={() => navigate("/trade")}
-            className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 gap-2"
+            className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 gap-2 hover-scale"
           >
             Get Started Now <ArrowRight className="w-5 h-5" />
           </Button>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-border bg-card/30">
