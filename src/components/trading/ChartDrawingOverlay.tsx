@@ -281,7 +281,13 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
 
     // Mouse event handlers
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-      if (!fabricRef.current || activeTool === "select" || activeTool === "brush" || activeTool === "move" || activeTool === "ruler") return;
+      if (!fabricRef.current) return;
+      
+      // Skip for non-drawing tools
+      if (activeTool === "select" || activeTool === "move" || activeTool === "ruler") return;
+      
+      // Brush is handled by fabric's drawing mode
+      if (activeTool === "brush") return;
 
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
@@ -300,6 +306,7 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
           strokeWidth: 2,
         });
         fabricRef.current.add(marker);
+        fabricRef.current.renderAll();
         saveState();
         onToolComplete?.();
         return;
@@ -308,6 +315,7 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
       if (activeTool === "longPosition") {
         const position = createLongPosition(x, y);
         fabricRef.current.add(position);
+        fabricRef.current.renderAll();
         saveState();
         onToolComplete?.();
         return;
@@ -316,6 +324,7 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
       if (activeTool === "shortPosition") {
         const position = createShortPosition(x, y);
         fabricRef.current.add(position);
+        fabricRef.current.renderAll();
         saveState();
         onToolComplete?.();
         return;
@@ -327,6 +336,7 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
           strokeWidth: 2,
         });
         fabricRef.current.add(line);
+        fabricRef.current.renderAll();
         saveState();
         onToolComplete?.();
         return;
@@ -338,12 +348,13 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
           strokeWidth: 2,
         });
         fabricRef.current.add(line);
+        fabricRef.current.renderAll();
         saveState();
         onToolComplete?.();
         return;
       }
 
-      // Drag-based tools
+      // Drag-based tools - set drawing state
       setIsDrawing(true);
       setStartPoint({ x, y });
 
@@ -366,6 +377,11 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
         });
         fabricRef.current.add(rectObj);
         tempObjectRef.current = rectObj;
+      } else if (activeTool === "fibonacci") {
+        // Create initial fibonacci
+        const fib = createFibonacci(x, y, x, y);
+        fabricRef.current.add(fib);
+        tempObjectRef.current = fib;
       } else if (activeTool === "channel") {
         // Channel starts with first line
         const line = new Line([x, y, x, y], {
@@ -375,7 +391,9 @@ export const ChartDrawingOverlay = forwardRef<ChartDrawingOverlayRef, ChartDrawi
         fabricRef.current.add(line);
         tempObjectRef.current = line;
       }
-    }, [activeTool, width, height, createLongPosition, createShortPosition, saveState, onToolComplete]);
+      
+      fabricRef.current.renderAll();
+    }, [activeTool, width, height, createLongPosition, createShortPosition, createFibonacci, saveState, onToolComplete]);
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
       if (!isDrawing || !startPoint || !fabricRef.current) return;
